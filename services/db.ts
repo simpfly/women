@@ -141,6 +141,17 @@ export const db = {
       // Note: We handle local UI update optimistically in App.tsx
   },
 
+  getSupportedStoryIds(): string[] {
+      const stored = localStorage.getItem('feminist_story_supported_ids');
+      return stored ? JSON.parse(stored) : [];
+  },
+
+  markStorySupported(storyId: string): void {
+      const current = new Set(this.getSupportedStoryIds());
+      current.add(storyId);
+      localStorage.setItem('feminist_story_supported_ids', JSON.stringify(Array.from(current)));
+  },
+
   // --- STATISTICS ---
   
   async getGlobalStats(): Promise<{ totalUsers: number } | null> {

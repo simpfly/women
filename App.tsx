@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, UserGender, AllergenLevel, Book, Category, PlayerProfile, Achievement, ChildArchetype, Term, UserStory, EmpowermentType, TermCategory, Scenario } from './types';
 import { generateScenarios, generateParentingStory, preloadScenarios } from './services/geminiService'; 
 import { db } from './services/db';
-import ScenarioCard from './components/ScenarioCard';
-import AnalysisModal from './components/AnalysisModal';
-import ReportModal from './components/ReportModal';
 import Toast from './components/Toast';
-import { Microscope, RotateCcw, Activity, Share2, User, ArrowRight, Quote, BookOpen, Library, X, ChevronRight, Lock, Fingerprint, PenLine, Award, Calendar, Baby, Dna, BrainCircuit, BookA, Heart, MessageSquareHeart, Globe, ExternalLink, Zap, Star, ShieldCheck, Users, Trophy, Clipboard, Download, Printer, Briefcase, Home, MessageCircle, Sparkles, Info, Check } from 'lucide-react';
+import { Microscope, RotateCcw, Activity, User, ArrowRight, Quote, BookOpen, Library, X, Lock, Fingerprint, PenLine, Award, Baby, BookA, Heart, MessageSquareHeart, Globe, Zap, Star, ShieldCheck, Users, Trophy, Clipboard, Briefcase, Home, MessageCircle, Sparkles, Info, Check } from 'lucide-react';
 import { soundManager } from './utils/sound';
 
 // Import Static Data
@@ -51,6 +48,20 @@ const FEMINIST_QUOTES = [
   { text: "忍耐不是美德，把忍耐当成美德是这个伪善的世界维持它扭曲秩序的方式。", author: "林奕含" }
 ];
 
+const STORY_TAG_OPTIONS = ['职场', '家庭', '关系', '公共空间', '成长时刻'] as const;
+const MAX_STORY_LENGTH = 280;
+const ScenarioCard = lazy(() => import('./components/ScenarioCard'));
+const AnalysisModal = lazy(() => import('./components/AnalysisModal'));
+const ReportModal = lazy(() => import('./components/ReportModal'));
+
+const modalFallback = (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="bg-white border-2 border-[#5b21b6] px-6 py-4 shadow-[8px_8px_0px_0px_rgba(91,33,182,0.35)] text-sm font-bold text-[#5b21b6]">
+      正在载入模块...
+    </div>
+  </div>
+);
+
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
     status: 'intro',
@@ -84,7 +95,6 @@ const App: React.FC = () => {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [lastUserChoice, setLastUserChoice] = useState(0); 
   const [storyFeedback, setStoryFeedback] = useState<{consequence: string, score: number} | undefined>(undefined);
-  const [shareBtnLabel, setShareBtnLabel] = useState("分享报告");
   const [categoryCompleted, setCategoryCompleted] = useState<boolean>(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [activeToast, setActiveToast] = useState<string | null>(null); // State for Toast
@@ -104,6 +114,12 @@ const App: React.FC = () => {
   const [visitorCount, setVisitorCount] = useState(0);
   const [stories, setStories] = useState<UserStory[]>([]);
   const [empowermentFilter, setEmpowermentFilter] = useState<EmpowermentType | 'ALL'>('ALL');
+  const [storyDraft, setStoryDraft] = useState('');
+  const [selectedStoryTags, setSelectedStoryTags] = useState<string[]>([]);
+  const [communityFeedback, setCommunityFeedback] = useState<string | null>(null);
+  const [isSubmittingStory, setIsSubmittingStory] = useState(false);
+  const [supportedStoryIds, setSupportedStoryIds] = useState<string[]>([]);
+  const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -139,6 +155,7 @@ const App: React.FC = () => {
         // 2. Load Stories
         const loadedStories = await db.getStories();
         setStories(loadedStories);
+        setSupportedStoryIds(db.getSupportedStoryIds());
 
         // 3. Load Stats
         const stats = await db.getGlobalStats();
@@ -175,6 +192,33 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [gameState.status]);
 
+  useEffect(() => {
+    const shouldLockScroll = showTutorial || showReportModal || showAnalysis;
+    const previousOverflow = document.body.style.overflow;
+    if (shouldLockScroll) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showTutorial, showReportModal, showAnalysis]);
+
+  useEffect(() => {
+    if (!statusNotice) return;
+    const timer = window.setTimeout(() => setStatusNotice(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [statusNotice]);
+
+  const resetTransientUi = () => {
+    setShowAnalysis(false);
+    setShowReportModal(false);
+    setShowTutorial(false);
+    setStoryFeedback(undefined);
+    setSelectedBook(null);
+    setSelectedTerm(null);
+    setStatusNotice(null);
+  };
+
   const updateProfileName = () => {
       if (tempName.trim()) {
           setProfile(prev => ({ ...prev, name: tempName.trim() }));
@@ -183,7 +227,10 @@ const App: React.FC = () => {
   };
 
   const handleSupportStory = async (id: string) => {
+      if (supportedStoryIds.includes(id)) return;
       soundManager.playClick();
+      setSupportedStoryIds(prev => [...prev, id]);
+      db.markStorySupported(id);
       // Optimistic Update
       setStories(prev => prev.map(s => {
           if (s.id === id) {
@@ -193,6 +240,54 @@ const App: React.FC = () => {
       }));
       // Async DB call
       await db.supportStory(id);
+  };
+
+  const handleToggleStoryTag = (tag: string) => {
+      setSelectedStoryTags(prev => (
+          prev.includes(tag) ? prev.filter(item => item !== tag) : [...prev, tag].slice(0, 3)
+      ));
+  };
+
+  const handleSubmitStory = async () => {
+      const content = storyDraft.trim();
+      if (!content) {
+          setCommunityFeedback('先写下一段经历，再投递。');
+          soundManager.playMiss();
+          return;
+      }
+
+      if (content.length < 12) {
+          setCommunityFeedback('内容至少写 12 个字，方便其他人理解你的经历。');
+          soundManager.playMiss();
+          return;
+      }
+
+      setIsSubmittingStory(true);
+      setCommunityFeedback(null);
+      soundManager.playClick();
+
+      const story: UserStory = {
+          id: `story-${Date.now()}`,
+          content,
+          tags: selectedStoryTags.length > 0 ? selectedStoryTags : ['共鸣'],
+          supportCount: 0,
+          timestamp: Date.now()
+      };
+
+      try {
+          await db.addStory(story);
+          setStories(prev => [story, ...prev]);
+          setStoryDraft('');
+          setSelectedStoryTags([]);
+          setCommunityFeedback('已投递到共鸣广场。');
+          soundManager.playSuccess();
+      } catch (error) {
+          console.error('Failed to submit story', error);
+          setCommunityFeedback('投递失败，请稍后重试。');
+          soundManager.playMiss();
+      } finally {
+          setIsSubmittingStory(false);
+      }
   };
 
   const handleGenderSelect = (gender: UserGender) => {
@@ -220,7 +315,6 @@ const App: React.FC = () => {
   const startGame = async (gender: UserGender, category: Category | 'RANDOM') => {
     soundManager.playStart();
     setGameState(prev => ({ ...prev, status: 'loading', userGender: gender, selectedCategory: category }));
-    setShareBtnLabel("分享报告");
     setCategoryCompleted(false);
     // Pick a new random quote for this loading session
     setQuoteIndex(Math.floor(Math.random() * FEMINIST_QUOTES.length));
@@ -282,11 +376,21 @@ const App: React.FC = () => {
              newTitles.add(badgeTitle);
              return { ...prev, earnedTitles: Array.from(newTitles) };
          });
-         setGameState(prev => ({ ...prev, status: 'result', currentTitle: badgeTitle, userGender: gender })); // Ensure we stay in result state
+         setGameState(prev => ({
+             ...prev,
+             status: 'result',
+             userGender: gender,
+             scenarios: [],
+             currentIndex: 0,
+             score: 0,
+             detectedAllergens: [],
+             newlyUnlockedBookId: null,
+             currentTitle: badgeTitle
+         }));
     } else {
          // Random mode ran out (unlikely but possible if live API fails)
          setGameState(prev => ({ ...prev, status: 'scenario-select' })); 
-         alert("暂无更多题目，请稍后再试！");
+         setStatusNotice("当前题库已筛查完毕，请切换别的领域。");
     }
   };
 
@@ -317,6 +421,12 @@ const App: React.FC = () => {
   };
 
   const loadIntro = () => {
+      resetTransientUi();
+      setCategoryCompleted(false);
+      setIsEditingName(false);
+      setStoryDraft('');
+      setSelectedStoryTags([]);
+      setCommunityFeedback(null);
       setGameState({
           status: 'intro',
           userGender: null,
@@ -408,11 +518,13 @@ const App: React.FC = () => {
 
   const finishStory = () => {
       soundManager.playSuccess();
+      setCategoryCompleted(false);
       setGameState(prev => ({ ...prev, status: 'story-result' }));
   };
 
   const finishGame = () => {
     soundManager.playSuccess();
+    setCategoryCompleted(false);
 
     // Calculate Results
     const totalPossible = gameState.scenarios.length * 100;
@@ -850,41 +962,79 @@ const App: React.FC = () => {
                                  <h3 className="font-bold text-[#5b21b6] mb-2 flex items-center gap-2">
                                      <PenLine className="w-4 h-4" /> 书写你的故事
                                  </h3>
+                                 <div className="flex flex-wrap gap-2 mb-4">
+                                     {STORY_TAG_OPTIONS.map(tag => {
+                                         const isActive = selectedStoryTags.includes(tag);
+                                         return (
+                                             <button
+                                                 key={tag}
+                                                 onClick={() => handleToggleStoryTag(tag)}
+                                                 className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${
+                                                     isActive
+                                                     ? 'bg-[#5b21b6] text-white border-[#5b21b6]'
+                                                     : 'bg-white text-[#5b21b6] border-purple-200 hover:border-[#5b21b6]'
+                                                 }`}
+                                             >
+                                                 #{tag}
+                                             </button>
+                                         );
+                                     })}
+                                 </div>
                                  <textarea 
+                                    value={storyDraft}
+                                    onChange={(e) => {
+                                        setStoryDraft(e.target.value.slice(0, MAX_STORY_LENGTH));
+                                        if (communityFeedback) setCommunityFeedback(null);
+                                    }}
                                     className="w-full bg-purple-50 border-0 p-4 text-sm rounded-sm focus:ring-2 focus:ring-[#5b21b6] outline-none mb-4 min-h-[100px]"
                                     placeholder="在这里写下你曾经历过的性别偏见，或者觉醒的瞬间..."
                                  ></textarea>
                                  <div className="flex justify-between items-center">
-                                     <span className="text-xs text-gray-400">匿名发布</span>
-                                     <button onClick={() => { soundManager.playSuccess(); alert("感谢分享！故事将在审核后展示。"); }} className="bg-[#5b21b6] text-white px-6 py-2 rounded-sm font-bold hover:bg-[#4c1d95]">
-                                         投递
+                                     <div>
+                                         <span className="text-xs text-gray-400">匿名发布 · {storyDraft.length}/{MAX_STORY_LENGTH}</span>
+                                         {communityFeedback && (
+                                             <p className={`text-xs mt-1 ${communityFeedback.includes('失败') ? 'text-red-500' : 'text-[#5b21b6]'}`}>
+                                                 {communityFeedback}
+                                             </p>
+                                         )}
+                                     </div>
+                                     <button
+                                        onClick={handleSubmitStory}
+                                        disabled={isSubmittingStory}
+                                        className="bg-[#5b21b6] text-white px-6 py-2 rounded-sm font-bold hover:bg-[#4c1d95] disabled:opacity-50 disabled:cursor-not-allowed"
+                                     >
+                                         {isSubmittingStory ? '投递中...' : '投递'}
                                      </button>
                                  </div>
                              </div>
 
                              {/* Story List */}
-                             {stories.map(story => (
-                                 <div key={story.id} className="bg-white p-6 rounded-sm shadow-sm">
-                                     <div className="flex gap-2 mb-3">
-                                         {story.tags.map(t => (
-                                             <span key={t} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full">#{t}</span>
-                                         ))}
+                             {stories.map((story) => {
+                                 const hasSupported = supportedStoryIds.includes(story.id);
+                                 return (
+                                     <div key={story.id} className="bg-white p-6 rounded-sm shadow-sm">
+                                         <div className="flex gap-2 mb-3">
+                                             {story.tags.map(t => (
+                                                 <span key={t} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full">#{t}</span>
+                                             ))}
+                                         </div>
+                                         <p className="text-gray-800 leading-relaxed mb-4 whitespace-pre-line">
+                                             {story.content}
+                                         </p>
+                                         <div className="flex items-center justify-between text-xs text-gray-400">
+                                             <span>{new Date(story.timestamp).toLocaleDateString('zh-CN')}</span>
+                                             <button 
+                                                onClick={() => handleSupportStory(story.id)}
+                                                disabled={hasSupported}
+                                                className={`flex items-center gap-1 transition-colors group ${hasSupported ? 'text-[#5b21b6] cursor-default' : 'hover:text-[#5b21b6]'}`}
+                                             >
+                                                 <Heart className={`w-4 h-4 ${story.supportCount > 0 ? 'fill-purple-50 text-purple-500' : ''} ${hasSupported ? '' : 'group-hover:scale-110 transition-transform'}`} />
+                                                 <span>{story.supportCount} {hasSupported ? '已共鸣' : '共鸣'}</span>
+                                             </button>
+                                         </div>
                                      </div>
-                                     <p className="text-gray-800 leading-relaxed mb-4 whitespace-pre-line">
-                                         {story.content}
-                                     </p>
-                                     <div className="flex items-center justify-between text-xs text-gray-400">
-                                         <span>{new Date(story.timestamp).toLocaleDateString()}</span>
-                                         <button 
-                                            onClick={() => handleSupportStory(story.id)}
-                                            className="flex items-center gap-1 hover:text-[#5b21b6] transition-colors group"
-                                         >
-                                             <Heart className={`w-4 h-4 ${story.supportCount > 0 ? 'fill-purple-50 text-purple-500' : ''} group-hover:scale-110 transition-transform`} />
-                                             <span>{story.supportCount} 共鸣</span>
-                                         </button>
-                                     </div>
-                                 </div>
-                             ))}
+                                 );
+                             })}
                         </div>
                     )}
                 </div>
@@ -973,6 +1123,11 @@ const App: React.FC = () => {
 
     return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-purple-50 relative pattern-diagonal-lines">
+      {statusNotice && (
+        <div className="absolute top-6 left-1/2 z-30 -translate-x-1/2 bg-white border border-[#5b21b6] px-4 py-2 shadow-[4px_4px_0px_0px_#5b21b6] text-xs font-bold text-[#5b21b6]">
+          {statusNotice}
+        </div>
+      )}
       {/* Top Bar Actions */}
       <div className="absolute top-6 right-6 flex gap-3 z-20">
          <button 
@@ -1203,25 +1358,29 @@ const App: React.FC = () => {
              </div>
 
              <div className="w-full max-w-2xl pt-12 pb-4">
-                 <AnimatePresence mode='wait'>
-                    <ScenarioCard 
-                        key={currentItem?.id}
-                        scenario={isStory ? undefined : currentItem as Scenario}
-                        storyEvent={isStory ? currentItem as any : undefined}
-                        onEvaluate={handleEvaluation}
-                    />
-                 </AnimatePresence>
+                 <Suspense fallback={modalFallback}>
+                     <AnimatePresence mode='wait'>
+                        <ScenarioCard 
+                            key={currentItem?.id}
+                            scenario={isStory ? undefined : currentItem as Scenario}
+                            storyEvent={isStory ? currentItem as any : undefined}
+                            onEvaluate={handleEvaluation}
+                        />
+                     </AnimatePresence>
+                 </Suspense>
              </div>
 
              {showAnalysis && (
-                <AnalysisModal 
-                    scenario={!isStory ? currentItem as Scenario : undefined}
-                    storyFeedback={storyFeedback}
-                    userChoice={lastUserChoice}
-                    onNext={nextScenario}
-                    onEncounter={handleEncounterAllergen}
-                    hasEncountered={!isStory && profile.encounteredAllergens.includes((currentItem as Scenario).allergenName)}
-                />
+                <Suspense fallback={modalFallback}>
+                    <AnalysisModal 
+                        scenario={!isStory ? currentItem as Scenario : undefined}
+                        storyFeedback={storyFeedback}
+                        userChoice={lastUserChoice}
+                        onNext={nextScenario}
+                        onEncounter={handleEncounterAllergen}
+                        hasEncountered={!isStory && profile.encounteredAllergens.includes((currentItem as Scenario).allergenName)}
+                    />
+                </Suspense>
              )}
         </div>
       );
@@ -1299,7 +1458,50 @@ const App: React.FC = () => {
   };
 
   const renderResult = () => {
-      const maxScore = gameState.scenarios.length * 100;
+      if (categoryCompleted) {
+          return (
+            <div className="min-h-screen bg-[#2e1065] flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-white w-full max-w-lg p-8 border-4 border-white shadow-2xl relative overflow-hidden text-center"
+                >
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-purple-500 to-indigo-500"></div>
+                    <Trophy className="w-16 h-16 text-[#5b21b6] mx-auto mb-4" />
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">分类阶段完成</p>
+                    <h1 className="text-4xl font-black text-[#2e1065] my-3">{gameState.currentTitle || '领域通关'}</h1>
+                    <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                        这个领域的静态题库已经全部筛查完毕。继续切换其他领域，或者回到主页生成你的阶段性报告。
+                    </p>
+                    <div className="bg-purple-50 p-4 mb-6 text-left border-l-4 border-[#5b21b6]">
+                        <h3 className="font-bold text-[#2e1065] mb-2 flex items-center gap-2">
+                            <Award className="w-4 h-4" />
+                            获得称号
+                        </h3>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                            {ACHIEVEMENTS.find(a => a.title === gameState.currentTitle)?.description || '你已经完成当前筛查领域。'}
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button 
+                            onClick={() => setGameState(prev => ({ ...prev, status: 'scenario-select' }))}
+                            className="py-3 border-2 border-[#5b21b6] text-[#5b21b6] font-bold hover:bg-purple-50 transition-colors"
+                        >
+                            换个领域
+                        </button>
+                        <button 
+                            onClick={loadIntro}
+                            className="py-3 bg-[#5b21b6] text-white font-bold hover:bg-[#4c1d95] transition-colors shadow-lg"
+                        >
+                            返回大厅
+                        </button>
+                    </div>
+                </motion.div>
+            </div>
+          );
+      }
+
+      const maxScore = Math.max(1, gameState.scenarios.length * 100);
       const score = gameState.score;
       const percentage = Math.round((score / maxScore) * 100);
 
@@ -1371,7 +1573,7 @@ const App: React.FC = () => {
                         onClick={() => setShowReportModal(true)}
                         className="py-3 bg-[#5b21b6] text-white font-bold hover:bg-[#4c1d95] transition-colors shadow-lg"
                     >
-                        {shareBtnLabel}
+                        分享报告
                     </button>
                 </div>
             </motion.div>
@@ -1409,10 +1611,12 @@ const App: React.FC = () => {
 
       {/* Report Modal */}
       {showReportModal && (
-          <ReportModal 
-              profile={profile} 
-              onClose={() => setShowReportModal(false)} 
-          />
+          <Suspense fallback={modalFallback}>
+              <ReportModal 
+                  profile={profile} 
+                  onClose={() => setShowReportModal(false)} 
+              />
+          </Suspense>
       )}
     </>
   );

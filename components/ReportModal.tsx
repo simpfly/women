@@ -1,8 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PlayerProfile } from '../types';
-import { X, Download, Share2, Loader2, Activity } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { X, Download, Share2, Loader2, Activity, CheckCircle2, AlertCircle } from 'lucide-react';
 import { soundManager } from '../utils/sound';
 
 interface ReportModalProps {
@@ -10,50 +9,131 @@ interface ReportModalProps {
   onClose: () => void;
 }
 
+const REPORT_URL = 'https://women.simpfly.info';
+const REPORT_QR_SRC = `https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(REPORT_URL)}`;
+
+const generateReportPng = async (node: HTMLDivElement) => {
+  const { toPng } = await import('html-to-image');
+  return toPng(node, {
+    cacheBust: true,
+    pixelRatio: 2,
+    backgroundColor: '#ffffff'
+  });
+};
+
 const ReportModal: React.FC<ReportModalProps> = ({ profile, onClose }) => {
   const reportRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<'success' | 'error'>('success');
 
   const avgScore = profile.totalTests > 0 ? Math.round(profile.totalScoreAccumulated / profile.totalTests) : 0;
   const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
   const timeStr = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+  useEffect(() => {
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  }, [onClose]);
 
   const handleDownload = useCallback(async () => {
     if (reportRef.current === null) return;
     
     soundManager.playClick();
     setIsGenerating(true);
+    setStatusMessage(null);
 
     try {
       // Small delay to ensure rendering frames are ready
       await new Promise((resolve) => setTimeout(resolve, 100));
       
-      const dataUrl = await toPng(reportRef.current, { 
-          cacheBust: true,
-          pixelRatio: 2, // Higher quality
-          backgroundColor: '#ffffff'
-      });
+      const dataUrl = await generateReportPng(reportRef.current);
       
       const link = document.createElement('a');
       link.download = `Feminist_Report_${profile.id}.png`;
       link.href = dataUrl;
       link.click();
       
+      setStatusTone('success');
+      setStatusMessage('报告图片已保存到本地。');
       soundManager.playSuccess();
     } catch (err) {
       console.error('Failed to generate image', err);
-      alert("图片生成失败，请尝试截图保存。");
+      setStatusTone('error');
+      setStatusMessage('图片生成失败，请尝试截图保存。');
+      soundManager.playMiss();
     } finally {
       setIsGenerating(false);
     }
   }, [profile.id]);
 
+  const handleShare = useCallback(async () => {
+    if (reportRef.current === null || isGenerating) return;
+
+    soundManager.playClick();
+    setIsGenerating(true);
+    setStatusMessage(null);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const dataUrl = await generateReportPng(reportRef.current);
+
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `Feminist_Report_${profile.id}.png`, { type: 'image/png' });
+      const shareData = {
+        title: '女性主义过敏源筛查报告',
+        text: `我刚生成了 ${profile.name} 的筛查报告。`,
+        files: [file]
+      };
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share(shareData);
+        setStatusTone('success');
+        setStatusMessage('系统分享面板已打开。');
+      } else {
+        await navigator.clipboard.writeText(
+          `女性主义过敏源筛查报告\n受试者：${profile.name}\n样本编号：${profile.id}\n敏感度指数：${avgScore}%`
+        );
+        setStatusTone('success');
+        setStatusMessage('当前设备不支持系统分享，已复制报告摘要。');
+      }
+
+      soundManager.playSuccess();
+    } catch (err) {
+      console.error('Failed to share report', err);
+      setStatusTone('error');
+      setStatusMessage('分享失败，请改用“保存图片”。');
+      soundManager.playMiss();
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [isGenerating, profile.id, profile.name]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-lg my-8">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+      onClick={onClose}
+    >
+      <div className="relative w-full max-w-lg my-8" onClick={(event) => event.stopPropagation()}>
         
         {/* Actions Bar */}
         <div className="flex justify-end gap-3 mb-4 sticky top-0 z-50">
+            <button
+                onClick={handleShare}
+                disabled={isGenerating}
+                className="bg-white text-[#5b21b6] px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-lg hover:bg-purple-50 transition-colors disabled:opacity-50"
+            >
+                <Share2 className="w-4 h-4" />
+                分享
+            </button>
             <button 
                 onClick={handleDownload}
                 disabled={isGenerating}
@@ -71,7 +151,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ profile, onClose }) => {
         </div>
 
         {/* --- REPORT CONTAINER (Target for Image Generation) --- */}
-        <div 
+        <div
             ref={reportRef} 
             className="bg-white text-black p-0 shadow-2xl overflow-hidden relative"
             style={{ 
@@ -193,12 +273,20 @@ const ReportModal: React.FC<ReportModalProps> = ({ profile, onClose }) => {
                         <p className="mt-2">本报告仅供自我觉察参考，不作为医学诊断依据。</p>
                     </div>
                     <div className="text-right">
-                        <div className="w-12 h-12 bg-black ml-auto mb-1 flex items-center justify-center text-white text-[8px] text-center leading-tight p-1">
-                            QR CODE
-                            <br/>
-                            PLACEHOLDER
-                        </div>
-                        <p className="font-mono">feminist-allergen-test.com</p>
+                        <a
+                          href={REPORT_URL}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block"
+                          aria-label="打开 women.simpfly.info"
+                        >
+                          <img
+                            src={REPORT_QR_SRC}
+                            alt="women.simpfly.info QR code"
+                            className="w-12 h-12 ml-auto mb-1 border border-black bg-white"
+                          />
+                        </a>
+                        <p className="font-mono">women.simpfly.info</p>
                     </div>
                 </div>
             </div>
@@ -207,9 +295,18 @@ const ReportModal: React.FC<ReportModalProps> = ({ profile, onClose }) => {
             <div className="absolute inset-0 bg-[#fff] opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'4\' height=\'4\' viewBox=\'0 0 4 4\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 3h1v1H1V3zm2-2h1v1H3V1z\' fill=\'%23000000\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
         </div>
         
-        <p className="text-center text-white/50 text-xs mt-4">
-            点击上方按钮保存图片，分享你的觉醒时刻
-        </p>
+        <div className="mt-4 min-h-6 text-center">
+            {statusMessage ? (
+                <p className={`inline-flex items-center gap-2 text-xs ${statusTone === 'success' ? 'text-white/80' : 'text-red-200'}`}>
+                    {statusTone === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    {statusMessage}
+                </p>
+            ) : (
+                <p className="text-center text-white/50 text-xs">
+                    点击上方按钮保存图片，分享你的觉醒时刻
+                </p>
+            )}
+        </div>
       </div>
     </div>
   );
