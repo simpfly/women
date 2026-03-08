@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GameState, UserGender, AllergenLevel, Book, Category, PlayerProfile, Achievement, ChildArchetype, Term, UserStory, EmpowermentType, TermCategory, Scenario } from './types';
+import { GameState, UserGender, AllergenLevel, Book, Category, PlayerProfile, Achievement, Term, UserStory, EmpowermentType, TermCategory, Scenario } from './types';
 import { generateScenarios, generateParentingStory, preloadScenarios } from './services/geminiService'; 
 import { db } from './services/db';
 import Toast from './components/Toast';
@@ -53,6 +53,11 @@ const MAX_STORY_LENGTH = 280;
 const ScenarioCard = lazy(() => import('./components/ScenarioCard'));
 const AnalysisModal = lazy(() => import('./components/AnalysisModal'));
 const ReportModal = lazy(() => import('./components/ReportModal'));
+const STORY_TITLE_DESCRIPTIONS: Record<string, string> = {
+  '灯塔守护者': '你持续给出了支持性回应，孩子学会了把边界、能力和自我价值放在一起理解。',
+  '温和的引导者': '你并不总是坚定，但多数时刻愿意停下来解释和修正，孩子会记得这些缓冲地带里的支持。',
+  '传统守望者': '你更多沿用了既有规则。孩子能感受到秩序，却也更容易把性别限制误认为自然现实。'
+};
 
 const modalFallback = (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -397,6 +402,8 @@ const App: React.FC = () => {
   // Story Mode Start
   const startStoryMode = async () => {
       soundManager.playStart();
+      setStoryFeedback(undefined);
+      setCategoryCompleted(false);
       // Pick a new random quote for this loading session
       setQuoteIndex(Math.floor(Math.random() * FEMINIST_QUOTES.length));
       
@@ -412,7 +419,8 @@ const App: React.FC = () => {
               storyEvents,
               childGender,
               currentIndex: 0,
-              score: 0 // Reset score for story
+              score: 0, // Reset score for story
+              currentTitle: null
           }));
       } catch (e) {
           console.error(e);
@@ -519,7 +527,29 @@ const App: React.FC = () => {
   const finishStory = () => {
       soundManager.playSuccess();
       setCategoryCompleted(false);
-      setGameState(prev => ({ ...prev, status: 'story-result' }));
+      const maxScore = Math.max(1, gameState.storyEvents.length * 2);
+      const percentage = Math.round((gameState.score / maxScore) * 100);
+
+      let title = "";
+      if (percentage >= 80) {
+          title = "灯塔守护者";
+      } else if (percentage >= 50) {
+          title = "温和的引导者";
+      } else {
+          title = "传统守望者";
+      }
+
+      if (!profile.earnedTitles.includes(title)) {
+          setActiveToast(title);
+      }
+
+      setProfile(prev => {
+          const newTitles = new Set(prev.earnedTitles);
+          newTitles.add(title);
+          return { ...prev, earnedTitles: Array.from(newTitles) };
+      });
+
+      setGameState(prev => ({ ...prev, status: 'story-result', currentTitle: title }));
   };
 
   const finishGame = () => {
@@ -1422,6 +1452,8 @@ const App: React.FC = () => {
       const maxScore = gameState.storyEvents.length * 2;
       const score = gameState.score;
       const percentage = (score / maxScore) * 100;
+      const goodCount = Math.round(score / 2);
+      const childLabel = gameState.childGender === 'female' ? '女孩' : '男孩';
       
       let title = "";
       let desc = "";
@@ -1443,6 +1475,28 @@ const App: React.FC = () => {
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">养育风格评定</h2>
                 <h1 className="text-3xl font-black text-[#2e1065] mb-4">{title}</h1>
                 <p className="text-sm text-gray-600 leading-relaxed mb-8">{desc}</p>
+
+                <div className="grid grid-cols-3 gap-3 mb-8 text-left">
+                    <div className="bg-purple-50 border border-purple-100 p-3">
+                        <p className="text-[10px] text-gray-400 uppercase">养育对象</p>
+                        <p className="font-bold text-[#2e1065] mt-1">{childLabel}</p>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-100 p-3">
+                        <p className="text-[10px] text-gray-400 uppercase">支持时刻</p>
+                        <p className="font-bold text-[#2e1065] mt-1">{goodCount}/{gameState.storyEvents.length}</p>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-100 p-3">
+                        <p className="text-[10px] text-gray-400 uppercase">成长指数</p>
+                        <p className="font-bold text-[#2e1065] mt-1">{Math.round(percentage)}%</p>
+                    </div>
+                </div>
+
+                <div className="bg-[#f8f5ff] border-l-4 border-[#5b21b6] text-left p-4 mb-8">
+                    <p className="text-xs font-bold text-[#5b21b6] uppercase tracking-widest mb-2">结果解读</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                        {STORY_TITLE_DESCRIPTIONS[title]}
+                    </p>
+                </div>
                 
                 <div className="flex gap-4">
                     <button onClick={loadIntro} className="flex-1 py-3 border-2 border-[#5b21b6] font-bold text-[#5b21b6] hover:bg-purple-50">

@@ -1,37 +1,75 @@
-import { Scenario, Category, AllergenLevel, UserGender, StoryEvent } from "../types";
+import { Scenario, Category, UserGender, StoryEvent } from "../types";
 import { STATIC_SCENARIOS_FEMALE, STATIC_SCENARIOS_MALE, STATIC_PARENTING_SCENARIOS } from "../data/scenarios";
 
-// --- BUFFERING SYSTEM ---
-// Keep a buffer of scenarios ready to serve immediately
-let scenarioBuffer: Scenario[] = [];
-let bufferGender: UserGender | null = null;
-let isFetching = false;
+const STORY_STAGES = [
+    { age: "3岁", title: "早期认同" },
+    { age: "6岁", title: "规则学习" },
+    { age: "9岁", title: "学校分工" },
+    { age: "13岁", title: "青春期边界" },
+    { age: "17岁", title: "未来想象" }
+] as const;
 
-// Fallback data for story mode
-const FALLBACK_STORY: StoryEvent[] = [
-    {
-        id: "s1",
-        age: "3岁",
-        title: "玩具的选择",
-        content: "亲戚送给孩子一套粉红色的过家家厨房玩具，但孩子盯着商场里的机械挖掘机不肯走。",
-        options: [
-            { text: "劝说：那个太沉了不好拿，而且容易弄脏裙子，粉色的厨房多可爱呀。", score: 0, consequence: "孩子学会了玩具是有性别的，并开始在意'得体'。" },
-            { text: "折中：既然喜欢就都买回家试试看吧。", score: 1, consequence: "孩子得到了满足，但仍对亲戚的态度感到困惑。" },
-            { text: "支持：立刻买下挖掘机，告诉她没有什么玩具是女孩不能玩的。", score: 2, consequence: "孩子建立了一种自信：喜好不受性别限制。" }
-        ]
+const CHILD_COPY = {
+    female: {
+        child: "女儿",
+        pronoun: "她",
+        pronounObj: "她",
+        role: "女孩"
     },
-    {
-        id: "s2",
-        age: "7岁",
-        title: "班干部的竞选",
-        content: "老师让男生去搬新书，让女生负责擦桌子。孩子问你为什么。",
-        options: [
-            { text: "解释：男生天生力气大就该多干活，女孩子要被照顾，擦桌子多轻松。", score: 0, consequence: "孩子接受了'弱者红利'，同时也默认了能力的上限。" },
-            { text: "回避：老师这么安排肯定有道理，照做就是了。", score: 0, consequence: "教会了顺从权威，而非思考不公。" },
-            { text: "引导：鼓励孩子去问老师‘我可以去搬书吗？’", score: 2, consequence: "孩子学会了挑战不合理的性别分工。" }
-        ]
+    male: {
+        child: "儿子",
+        pronoun: "他",
+        pronounObj: "他",
+        role: "男孩"
     }
-];
+} as const;
+
+const rewriteStoryText = (text: string, gender: UserGender) => {
+    const copy = CHILD_COPY[gender];
+    return text
+        .replace(/女儿/g, copy.child)
+        .replace(/儿子/g, copy.child)
+        .replace(/女孩/g, copy.role)
+        .replace(/男孩/g, copy.role)
+        .replace(/她/g, copy.pronoun)
+        .replace(/他/g, copy.pronoun);
+};
+
+const rewriteConsequence = (text: string | undefined, gender: UserGender) => {
+    if (!text) return undefined;
+    const copy = CHILD_COPY[gender];
+    return text
+        .replace(/孩子/g, copy.child)
+        .replace(/她/g, copy.pronoun)
+        .replace(/他/g, copy.pronoun);
+};
+
+const buildStoryFromScenarios = (gender: UserGender): StoryEvent[] => {
+    const shuffled = [...STATIC_PARENTING_SCENARIOS].sort(() => 0.5 - Math.random()).slice(0, STORY_STAGES.length);
+
+    return shuffled.map((scenario, index) => {
+        const stage = STORY_STAGES[index];
+        return {
+            id: `story-${gender}-${scenario.id}`,
+            age: stage.age,
+            title: `${stage.title} · ${scenario.allergenName}`,
+            content: rewriteStoryText(scenario.content, gender),
+            options: (scenario.options || []).map((option) => ({
+                ...option,
+                text: rewriteStoryText(option.text, gender),
+                consequence: rewriteConsequence(
+                    option.consequence ||
+                    (option.score === 2
+                        ? `${CHILD_COPY[gender].child}记住了边界、能力与尊严可以同时成立。`
+                        : option.score === 1
+                        ? `${CHILD_COPY[gender].child}感受到你的犹豫，也学会了在模糊地带里自我揣测。`
+                        : `${CHILD_COPY[gender].child}把这条性别规则默默收进了成长脚本。`),
+                    gender
+                )
+            }))
+        };
+    });
+};
 
 // 完全移除大模型API_KEY读取
 
@@ -85,7 +123,6 @@ export const generateScenarios = async (gender: UserGender, category: Category |
 };
 
 export const generateParentingStory = async (childGender: UserGender): Promise<StoryEvent[]> => {
-    // 纯静态化：当前阶段我们将所有动态的剧情直接降级为预置的 FALLBACK_STORY。
-    // 如果想要更多样性，可以在这里从 data/stories.ts 里随机抽取一个子树
-    return new Promise(resolve => setTimeout(() => resolve(FALLBACK_STORY), 800));
+    const story = buildStoryFromScenarios(childGender);
+    return new Promise(resolve => setTimeout(() => resolve(story), 500));
 }
