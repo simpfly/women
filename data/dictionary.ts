@@ -173,6 +173,87 @@ export const FEMINIST_DICTIONARY: Term[] = [
         example: "认为男性有无法控制的性冲动，因此女性有责任避免被侵害，这是强奸文化的一部分。",
         relatedTermIds: ["d_ac_14", "d_ac_13"]
     },
+    {
+        id: "d_ac_20",
+        term: "父职红利",
+        english: "Fatherhood Bonus",
+        category: "ACADEMIC",
+        definition: "与'母职惩罚'相对。指男性在成为父亲后，往往在职场上获得更高的起薪、更多的晋升机会，因为社会普遍认为有家庭的男性更稳定、更有责任心。",
+        example: "男同事刚生完孩子就被提拔为主管，而女同事休完产假回来却发现岗位被顶替了。",
+        relatedTermIds: ["d_ac_09", "d_ac_11"]
+    },
+    {
+        id: "d_ac_21",
+        term: "圣母/荡妇情结",
+        english: "Madonna-Whore Complex",
+        category: "ACADEMIC",
+        definition: "一种将女性截然二分为两种极端类型的心理扭曲：要么是纯洁无瑕、值得尊敬但没有性吸引力的'圣母'，要么是充满性吸引力但可以随意贬低、不可尊敬的'荡妇'。",
+        example: "他希望妻子像圣母一样纯洁贤良，却在外面寻找像荡妇一样的刺激，根本无法将一个女性看作完整的人。",
+        relatedTermIds: ["d_ac_13", "d_ac_04"]
+    },
+    {
+        id: "d_ac_22",
+        term: "微侵犯",
+        english: "Microaggression",
+        category: "ACADEMIC",
+        definition: "指在日常互动中，由于偏见而有意无意地对边缘群体（如女性、少数族裔）传达的轻微的、隐蔽的敌意、贬低或侮辱。",
+        example: "开会时，女同事刚提出一个方案，男主管就打断说：'大家都知道女生数学不太好，我们让小李（男）复核一下数据吧。'",
+        relatedTermIds: ["d_ac_17"]
+    },
+    {
+        id: "d_ac_23",
+        term: "同工同酬",
+        english: "Equal Pay for Equal Work",
+        category: "ACADEMIC",
+        definition: "劳动权利的概念，指在同一工作场所履行相同或同等价值职责的个人必须获得相等的报酬。现实中性别薪酬差距依然广泛存在。",
+        example: "虽然干着完全一样的工作，但男员工的底薪硬生生比女员工多了一千块钱。",
+        relatedTermIds: ["d_ac_06", "d_ac_09"]
+    },
+    {
+        id: "d_ac_24",
+        term: "粉红收银台 / 粉红贫民窟",
+        english: "Pink Ghetto",
+        category: "ACADEMIC",
+        definition: "指那些通常由女性主导、被社会认为'适合女性'的职业（如护理、幼教、基层行政）。这些职业往往薪资水平低、晋升空间小、社会地位不高。",
+        example: "一旦某个行业女性从业者增多，这个行业的整体薪资水平就会奇迹般地下降。",
+        relatedTermIds: ["d_ac_07", "d_ac_16"]
+    },
+    {
+        id: "d_ac_25",
+        term: "代际创伤",
+        english: "Intergenerational Trauma",
+        category: "ACADEMIC",
+        definition: "多维度的痛苦通过家庭和文化传递给下一代的现象。在许多文化中，重男轻女导致的女性剥夺感和痛苦，常常会无意识地传递给下一代女性。",
+        example: "她不明白为什么母亲总是把家里最好的东西留给哥哥，直到她发现外婆以前也是这么对待母亲的。",
+        relatedTermIds: ["d_in_09", "d_ac_01"]
+    },
+    {
+        id: "d_ac_26",
+        term: "女性凝视",
+        english: "Female Gaze",
+        category: "ACADEMIC",
+        definition: "作为'男性凝视'的反抗，指在艺术或媒介中打破传统的男性视阈，将主角（不分性别）作为有情感、有主体性的人来呈现，而不是物化的客体。",
+        example: "在这位女导演的镜头下，男主角不是在秀肌肉和权势，而是展现出了脆弱和共情能力。",
+        relatedTermIds: ["d_ac_03"]
+    },
+    {
+        id: "d_ac_27",
+        term: "异性恋霸权",
+        english: "Heteronormativity",
+        category: "ACADEMIC",
+        definition: "一种默认异性恋是唯一正常、自然、普遍的性取向的社会主流预设。这种霸权不仅排斥少数群体，也强化了二元对立的传统性别角色。",
+        example: "一见面长辈就问：'你有男朋友了吗？' 默认你不仅必须结婚，还必须是和男性结婚。",
+        relatedTermIds: ["d_ac_01"]
+    },
+    {
+        id: "d_ac_28",
+        term: "性别盲",
+        english: "Gender Blindness",
+        category: "ACADEMIC",
+        definition: "声称在做决定或制定政策时不考虑性别，看似公平。但由于现实社会中已经存在巨大的性别不平等，'盲目'往往会掩盖和维持这种不平等现状。",
+        example: "公司空调温度统一设定在男士西装觉得舒适的22度，却忽视了女性员工的生理机能差异，这就是一种性别盲的体现。",
+        relatedTermIds: ["d_ac_05"]
+    },
 
     // --- INTERNET (互联网/流行语) ---
     {
@@ -264,5 +345,95 @@ export const FEMINIST_DICTIONARY: Term[] = [
         definition: "指在重男轻女家庭中长大的女性，被家庭洗脑或强迫，无底线地牺牲自己的利益（金钱、生活）去资助弟弟。反映了家庭对女性的资源剥削。",
         example: "她工资的一半都要寄回家给弟弟买房，完全成了家里的扶弟魔。",
         relatedTermIds: ["d_ac_01"]
+    },
+    {
+        id: "d_in_10",
+        term: "厌蠢症",
+        english: "Hatred of 'Stupidity'",
+        category: "INTERNET",
+        definition: "互联网语境下，经常以讨厌'反应慢'或'不聪明'为幌子，行厌女之实。通常针对年轻女性展现出的无辜、弱势或不熟练的行为进行过度苛责，却对男性的同类行为极其宽容。",
+        example: "女司机不小心刮车被全网群嘲'厌蠢症犯了'，男司机醉驾却无人质疑其智商。",
+        relatedTermIds: ["d_ac_02"]
+    },
+    {
+        id: "d_in_11",
+        term: "娇妻",
+        english: "Stepford Wife / Supplicant Wife",
+        category: "INTERNET",
+        definition: "贬义词。指心甘情愿全盘接受父权制逻辑，通过迎合男性权威、让渡独立人格，以交换父权生态下的庇护或物质利益的女性。常常在网络上炫耀这种从属关系。",
+        example: "看到网上有人炫耀老公每个月给她发零花钱但要求她必须顺从，网友评论：'放下助人情节，尊重娇妻命运。'",
+        relatedTermIds: ["d_in_02", "d_ac_12"]
+    },
+    {
+        id: "d_in_12",
+        term: "精神男人",
+        english: "Honorary Man",
+        category: "INTERNET",
+        definition: "指生理性别为女性，但在社会观念、权益争夺和利益立场上，完全代入并维护传统男权既得利益者视角的女性。即'虽然是女人，但拥有男人的大脑'。",
+        example: "一提到争取女性权益，她比男人跳得还高进行反驳，真是个名副其实的精神男人。",
+        relatedTermIds: ["d_in_02", "d_ac_12"]
+    },
+    {
+        id: "d_in_13",
+        term: "赛博牌坊",
+        english: "Cyber Chastity Arch",
+        category: "INTERNET",
+        definition: "指在互联网上，一部分偏执的网民用严苛保守的性道德和言行规范去审判其他女性。任何展现性感、活泼的女性都可能被他们集体'立牌坊'羞辱。",
+        example: "她只是发了一张去海边穿比基尼的照片，就被评论区建起了一座座赛博牌坊，骂她不知廉耻。",
+        relatedTermIds: ["d_ac_13", "d_ac_12"]
+    },
+    {
+        id: "d_in_14",
+        term: "独立女性",
+        english: "Independent Woman (Stigmatized)",
+        category: "INTERNET",
+        definition: "原本正向的词语。但在互联网上常被过度苛刻化或污名化。要么要求女性必须经济人格百分百完美且不依靠任何人才能配称独立；要么被污名化为'不好控制的刺头'。",
+        example: "只要收了男方一分钱礼物，就会被网友开除'独立女性'的籍贯，这其实是一种极端的苛责。",
+        relatedTermIds: ["d_ac_06", "d_in_02"]
+    },
+    {
+        id: "d_in_15",
+        term: "某某媛",
+        english: "Stigmatization of 'Yuan' (Socialite)",
+        category: "INTERNET",
+        definition: "原本意指名流淑女。现演变为网络暴力手段，将任何进入传统男性场域或享受中产生活方式的女性打上'媛'的标签（如佛媛、飞盘媛、病媛），暗示她们都是为了性感营销或钓金龟婿。",
+        example: "女孩去球场扔了个飞盘，就被拍照发上网骂是'飞盘媛'，这完全是对女性合法占用公共空间的驱赶和污名。",
+        relatedTermIds: ["d_ac_13", "d_ac_04"]
+    },
+    {
+        id: "d_in_16",
+        term: "擦边",
+        english: "Soft Porn / Edge-ball",
+        category: "INTERNET",
+        definition: "指在网络平台规则边缘徘徊，通过软色情或性暗示博取流量。女性主义视角下，需要区分这是个人性魅力的自由展现（主体性），还是迎合男性凝视的自我物化（客体化）。",
+        example: "批评'擦边'的焦点不应是羞辱展现身体的女性，而是要批判将女性身体变现并剥削的系统平台机制。",
+        relatedTermIds: ["d_ac_03", "d_ac_13"]
+    },
+    {
+        id: "d_in_17",
+        term: "大女主",
+        english: "Girl Boss / Strong Female Lead",
+        category: "INTERNET",
+        definition: "流行文化中的剧本类型。指以女性为绝对核心、具有强大权力和能力的影视设定。但也常被批判为：表面是女性崛起，内核依然是慕强逻辑，且往往最终还是靠强大男性拯救。",
+        example: "这部所谓的'大女主'剧，女主角遇到危机时，所有的金手指依然是三个爱着她的霸道总裁提供的。",
+        relatedTermIds: ["d_ac_18", "d_ac_08"]
+    },
+    {
+        id: "d_in_18",
+        term: "女子力",
+        english: "Joshi Ryoku / 'Girl Power' as compliance",
+        category: "INTERNET",
+        definition: "源自日本词汇。表面夸奖女性，实则是一套要求女性具备做家务能力、照顾人能力、保持妆容精致等符合传统性别刻板印象的隐形紧箍咒。",
+        example: "你连饭都不会做，太缺乏女子力了吧？",
+        relatedTermIds: ["d_ac_10", "d_ac_18"]
+    },
+    {
+        id: "d_in_19",
+        term: "既要又要",
+        english: "Demanding Both (Double Bind)",
+        category: "INTERNET",
+        definition: "常用来攻击处于转型期女性的词汇。实际上是指女性在觉醒过程中，试图摆脱传统义务却未能完全摆脱经济依附时的过渡阵痛，反映了结构性困境，却被简化为个人贪婪。",
+        example: "社会既要求女性在职场和男性一样能干挣钱，又要求她下班后温良恭俭让包揽家务，这才是真正的'既要又要'。",
+        relatedTermIds: ["d_ac_11", "d_ac_09"]
     }
 ];
