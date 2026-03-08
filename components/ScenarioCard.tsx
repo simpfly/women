@@ -142,20 +142,35 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
              </div>
         ) : (
             <div className="flex flex-col border-t-2 border-[#5b21b6]">
-                {[
-                    { text: labels.dismiss, score: 0, icon: "☁️" },
-                    { text: labels.unsure, score: 1, icon: "🤔" },
-                    { text: labels.alert, score: 2, icon: "⚡" }
-                ].map((option, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => { soundManager.playClick(); onEvaluate(option.score); }}
-                        className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-center justify-between"
-                    >
-                        <span className="text-sm md:text-base leading-tight uppercase tracking-widest font-black">{option.text}</span>
-                        <span className="text-xl group-hover:scale-110 transition-transform opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100">{option.icon}</span>
-                    </button>
-                ))}
+                {scenario?.options ? (
+                    scenario.options.map((opt, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => { soundManager.playClick(); onEvaluate(opt.score); }}
+                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4"
+                        >
+                             <span className="bg-[#5b21b6] text-white font-mono text-xs w-6 h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
+                                 {String.fromCharCode(65 + idx)}
+                             </span>
+                             <span className="text-sm md:text-base leading-tight">{opt.text}</span>
+                        </button>
+                    ))
+                ) : (
+                    [
+                        { text: labels.dismiss, score: 0, icon: "☁️" },
+                        { text: labels.unsure, score: 1, icon: "🤔" },
+                        { text: labels.alert, score: 2, icon: "⚡" }
+                    ].map((option, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => { soundManager.playClick(); onEvaluate(option.score); }}
+                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-center justify-between"
+                        >
+                            <span className="text-sm md:text-base leading-tight uppercase tracking-widest font-black">{option.text}</span>
+                            <span className="text-xl group-hover:scale-110 transition-transform opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100">{option.icon}</span>
+                        </button>
+                    ))
+                )}
             </div>
         )}
       </motion.div>

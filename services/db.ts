@@ -1,11 +1,11 @@
 import { PlayerProfile, UserStory } from '../types';
 import { INITIAL_STORIES } from '../data/stories';
 
-// Environment variables
-const API_KEY = process.env.MONGODB_API_KEY;
-const ENDPOINT = process.env.MONGODB_ENDPOINT;
-const DATA_SOURCE = process.env.MONGODB_DATA_SOURCE || 'Cluster0';
-const DATABASE = process.env.MONGODB_DATABASE || 'feminist-allergen';
+// Environment variables (Disabled for static mode)
+const API_KEY = "";
+const ENDPOINT = "";
+const DATA_SOURCE = 'Cluster0';
+const DATABASE = 'feminist-allergen';
 
 const PROFILE_COLLECTION = 'profiles';
 const STORY_COLLECTION = 'stories';

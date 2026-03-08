@@ -1096,7 +1096,6 @@ const App: React.FC = () => {
              <span>进入「养育实验室」</span>
          </motion.button>
         
-        <p className="mt-8 text-[10px] font-mono text-purple-400">由 GOOGLE GEMINI 驱动</p>
       </motion.div>
     </div>
   );

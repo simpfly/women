@@ -25,13 +25,14 @@ export interface Scenario {
   allergenLevel: AllergenLevel;
   analysis: string; 
   wittyComment: string;
+  options?: StoryOption[];
 }
 
 // --- Story Mode Types ---
 export interface StoryOption {
   text: string;
   score: number; // 0 = Stereotypical, 1 = Neutral, 2 = Empowering
-  consequence: string; // Immediate feedback
+  consequence?: string; // Immediate feedback
 }
 
 export interface StoryEvent {

@@ -1,4 +1,3 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { Scenario, Category, AllergenLevel, UserGender, StoryEvent } from "../types";
 import { STATIC_SCENARIOS_FEMALE, STATIC_SCENARIOS_MALE, STATIC_PARENTING_SCENARIOS } from "../data/scenarios";
 
@@ -34,7 +33,7 @@ const FALLBACK_STORY: StoryEvent[] = [
     }
 ];
 
-const getApiKey = () => process.env.API_KEY;
+// 完全移除大模型API_KEY读取
 
 // Helper to get random scenarios from static bank
 // CHANGED: Default count reduced to 5
@@ -66,209 +65,27 @@ const getRandomStaticScenarios = (gender: UserGender, category: Category | 'RAND
     return shuffled.slice(0, count);
 };
 
-// --- NEW PRELOAD FUNCTION ---
-// Call this when the app loads to fill the buffer in the background
+// 静态模式下不再需要动态生成题目
+// preLoad 也不再需要工作
 export const preloadScenarios = async (gender: UserGender = 'female') => {
-    // Prevent refetching if already fetching OR if buffer is populated with correct gender
-    if (isFetching || (scenarioBuffer.length > 0 && bufferGender === gender)) return;
-    
-    console.log("Starting background preload for", gender);
-    isFetching = true;
-    
-    // If we are switching gender context, clear previous buffer implicitly by overwriting later,
-    // but good practice to clear intent now.
-    if (bufferGender !== gender) {
-        scenarioBuffer = [];
-    }
-    bufferGender = gender;
-
-    try {
-        const scenarios = await fetchAiScenarios(gender, 'RANDOM');
-        if (scenarios.length > 0) {
-            scenarioBuffer = scenarios;
-            console.log("Buffer filled with", scenarios.length, "scenarios.");
-        }
-    } catch (e) {
-        console.warn("Preload failed silently", e);
-    } finally {
-        isFetching = false;
-    }
+    // 静态模式，瞬发，无需缓冲
 };
 
-// Internal function to actually call API
-const fetchAiScenarios = async (gender: UserGender, category: Category | 'RANDOM'): Promise<Scenario[]> => {
-    const apiKey = getApiKey();
-    if (!apiKey) return [];
-
-    const ai = new GoogleGenAI({ apiKey });
-    
-    const schema: Schema = {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            id: { type: Type.STRING },
-            content: { type: Type.STRING },
-            category: { type: Type.STRING, enum: Object.values(Category) },
-            allergenName: { type: Type.STRING },
-            allergenLevel: { type: Type.STRING, enum: Object.values(AllergenLevel) },
-            analysis: { type: Type.STRING },
-            wittyComment: { type: Type.STRING }
-          },
-          required: ["id", "content", "category", "allergenName", "allergenLevel", "analysis", "wittyComment"]
-        }
-    };
-
-    // CONTEXT REFINEMENT: Ensure distinct separation of concerns
-    const playerContext = gender === 'female' 
-    ? "The player is FEMALE. Scenarios should reflect systemic biases women face in China."
-    : "The player is MALE. Scenarios should reflect 'Toxic Masculinity', expectations of being a provider, or repression of emotions.";
-
-    let categoryPrompt = "";
-    if (category === Category.PARENTING) {
-        // STRICT CHILD-CENTRIC PROMPT
-        categoryPrompt = `CRITICAL: ALL scenarios must strictly focus on the CHILD's experience of gender socialization, or the parent observing gender bias affecting the CHILD.
-        - Examples: Gendered toys (blue for boys/pink for girls), teachers treating genders differently, relatives commenting on child's personality based on gender.
-        - The player's role is the PARENT witnessing these events.
-        - DO NOT generate scenarios about the parent's own workplace issues or marriage issues unless it directly impacts the child's gender perception.`;
-    } else if (category && category !== 'RANDOM') {
-        categoryPrompt = `ALL scenarios must be strictly within the '${category}' context.`;
-    } else {
-        categoryPrompt = "Categories should vary among Workplace, Relationship, Family, Social.";
-    }
-
-    try {
-        // GENERATE 5 QUESTIONS PER BATCH
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Generate 5 distinct, realistic scenarios that appear in Chinese society containing gender bias.
-            Language: MUST BE Simplified Chinese (简体中文).
-            Target Audience: Chinese users.
-            ${playerContext}
-            ${categoryPrompt}
-            Output pure JSON.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: schema,
-                systemInstruction: "You are an expert feminist sociologist specialized in Chinese gender dynamics."
-            }
-        });
-        
-        const text = response.text;
-        if (text) {
-            const data = JSON.parse(text) as Scenario[];
-            return data.map((d, i) => ({ ...d, id: `gen-${Date.now()}-${i}` }));
-        }
-        return [];
-    } catch (error) {
-        console.error("Gemini Generation Error:", error);
-        return [];
-    }
-}
-
 export const generateScenarios = async (gender: UserGender, category: Category | 'RANDOM' = 'RANDOM', playedIds: string[] = []): Promise<Scenario[]> => {
-  // STRATEGY: SPEED FIRST
-  if (category === 'RANDOM' && scenarioBuffer.length > 0 && bufferGender === gender) {
-      const data = [...scenarioBuffer];
-      scenarioBuffer = []; // Clear buffer
-      bufferGender = null;
-      preloadScenarios(gender); 
-      return new Promise(resolve => setTimeout(() => resolve(data), 3000));
-  }
-  
-  if (category === 'RANDOM' && bufferGender !== gender) {
-      scenarioBuffer = [];
-      bufferGender = null;
-  }
-
+  // 纯静态化策略：所有题目直接从静态数据池拉取
   const staticData = getRandomStaticScenarios(gender, category, playedIds, 5);
   
   if (staticData.length === 0) {
-      if (category !== 'RANDOM') {
-          return []; // Signal completion
-      } else {
-          const aiData = await fetchAiScenarios(gender, 'RANDOM');
-          return aiData;
-      }
+      // 题库耗尽，直接返回空信号完成
+      return []; 
   }
 
-  if (!isFetching && category === 'RANDOM') {
-      preloadScenarios(gender);
-  }
-
-  return new Promise(resolve => setTimeout(() => resolve(staticData), 3000));
+  // 模拟稍微真实的加载感，但不再需要等大模型
+  return new Promise(resolve => setTimeout(() => resolve(staticData), 500));
 };
 
 export const generateParentingStory = async (childGender: UserGender): Promise<StoryEvent[]> => {
-    const apiKey = getApiKey();
-    if (!apiKey) return new Promise(resolve => setTimeout(() => resolve(FALLBACK_STORY), 3000));
-
-    const ai = new GoogleGenAI({ apiKey });
-
-    const schema: Schema = {
-        type: Type.ARRAY,
-        items: {
-            type: Type.OBJECT,
-            properties: {
-                id: { type: Type.STRING },
-                age: { type: Type.STRING },
-                title: { type: Type.STRING },
-                content: { type: Type.STRING },
-                options: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            text: { type: Type.STRING },
-                            score: { type: Type.NUMBER },
-                            consequence: { type: Type.STRING }
-                        },
-                        required: ["text", "score", "consequence"]
-                    }
-                }
-            },
-            required: ["id", "age", "title", "content", "options"]
-        }
-    };
-
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Generate a chronological 5-stage coming-of-age simulation for a ${childGender === 'female' ? 'GIRL' : 'BOY'} in China.
-            Language: MUST BE Simplified Chinese (简体中文).
-            Perspective: The player is the PARENT observing or guiding the child.
-            Stages (Age keys must be exactly as written): 3岁 (Toddler), 7岁 (Primary), 12岁 (Middle), 16岁 (High School), 22岁 (Adult).
-            Focus: Gender roles, societal expectations, and how the parent's choice shapes the child's view.
-            
-            IMPORTANT: For EACH scenario, provide 3 distinct options with correct 'score':
-            - Score 0: Must be the option that enforces traditional gender stereotypes or dismisses the child's feelings. (Negative outcome)
-            - Score 1: A neutral or compromising option.
-            - Score 2: Must be the option that breaks stereotypes, empowers the child, or supports their individuality against bias. (Positive outcome)
-            
-            Output pure JSON.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: schema,
-                systemInstruction: "You are a parenting simulation engine. You MUST ensure the 'score' property matches the sentiment of the option text. Score 2 is ALWAYS the feminist/empowering choice."
-            }
-        });
-
-        const text = response.text;
-        if (text) {
-            const data = JSON.parse(text) as StoryEvent[];
-            // Post-processing to ensure scores are numbers and IDs are unique
-            return data.map((d, i) => ({ 
-                ...d, 
-                id: `story-${Date.now()}-${i}`,
-                options: d.options.map(opt => ({
-                    ...opt,
-                    score: Number(opt.score) // Explicitly cast to number to prevent type issues
-                }))
-            }));
-        }
-        return FALLBACK_STORY;
-    } catch (error) {
-        console.error("Story API Error:", error);
-        return FALLBACK_STORY;
-    }
+    // 纯静态化：当前阶段我们将所有动态的剧情直接降级为预置的 FALLBACK_STORY。
+    // 如果想要更多样性，可以在这里从 data/stories.ts 里随机抽取一个子树
+    return new Promise(resolve => setTimeout(() => resolve(FALLBACK_STORY), 800));
 }
