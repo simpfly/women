@@ -1,5 +1,11 @@
 import { Scenario, Category, UserGender, StoryEvent } from "../types";
-import { STATIC_SCENARIOS_FEMALE, STATIC_SCENARIOS_MALE, STATIC_PARENTING_SCENARIOS } from "../data/scenarios";
+import { 
+    STATIC_SCENARIOS_FEMALE, 
+    STATIC_SCENARIOS_MALE, 
+    STATIC_PARENTING_SCENARIOS,
+    PARENTING_STORY_FEMALE,
+    PARENTING_STORY_MALE
+} from "../data/scenarios";
 
 const STORY_STAGES = [
     { age: "3岁", title: "早期认同" },
@@ -9,64 +15,22 @@ const STORY_STAGES = [
     { age: "17岁", title: "未来想象" }
 ] as const;
 
-const CHILD_COPY = {
-    female: {
-        child: "女儿",
-        pronoun: "她",
-        pronounObj: "她",
-        role: "女孩"
-    },
-    male: {
-        child: "儿子",
-        pronoun: "他",
-        pronounObj: "他",
-        role: "男孩"
-    }
-} as const;
-
-const rewriteStoryText = (text: string, gender: UserGender) => {
-    const copy = CHILD_COPY[gender];
-    return text
-        .replace(/女儿/g, copy.child)
-        .replace(/儿子/g, copy.child)
-        .replace(/女孩/g, copy.role)
-        .replace(/男孩/g, copy.role)
-        .replace(/她/g, copy.pronoun)
-        .replace(/他/g, copy.pronoun);
-};
-
-const rewriteConsequence = (text: string | undefined, gender: UserGender) => {
-    if (!text) return undefined;
-    const copy = CHILD_COPY[gender];
-    return text
-        .replace(/孩子/g, copy.child)
-        .replace(/她/g, copy.pronoun)
-        .replace(/他/g, copy.pronoun);
-};
-
 const buildStoryFromScenarios = (gender: UserGender): StoryEvent[] => {
-    const shuffled = [...STATIC_PARENTING_SCENARIOS].sort(() => 0.5 - Math.random()).slice(0, STORY_STAGES.length);
+    // 严格区分男孩与女孩专属的成长历程故事池，彻底解决题目错位与倒置
+    const storyPool = gender === 'male' ? PARENTING_STORY_MALE : PARENTING_STORY_FEMALE;
 
-    return shuffled.map((scenario, index) => {
-        const stage = STORY_STAGES[index];
+    return STORY_STAGES.map((stage) => {
+        const stageEvents = storyPool[stage.age] || [];
+        if (stageEvents.length === 0) {
+            throw new Error(`未找到阶段 ${stage.age} 的养育故事数据`);
+        }
+        // 随机从该成长阶段选取一个贴合真实社会规训的情境
+        const randomIndex = Math.floor(Math.random() * stageEvents.length);
+        const selected = stageEvents[randomIndex];
+
         return {
-            id: `story-${gender}-${scenario.id}`,
-            age: stage.age,
-            title: `${stage.title} · ${scenario.allergenName}`,
-            content: rewriteStoryText(scenario.content, gender),
-            options: (scenario.options || []).map((option) => ({
-                ...option,
-                text: rewriteStoryText(option.text, gender),
-                consequence: rewriteConsequence(
-                    option.consequence ||
-                    (option.score === 2
-                        ? `${CHILD_COPY[gender].child}记住了边界、能力与尊严可以同时成立。`
-                        : option.score === 1
-                        ? `${CHILD_COPY[gender].child}感受到你的犹豫，也学会了在模糊地带里自我揣测。`
-                        : `${CHILD_COPY[gender].child}把这条性别规则默默收进了成长脚本。`),
-                    gender
-                )
-            }))
+            ...selected,
+            id: `story-${gender}-${selected.id}`
         };
     });
 };
