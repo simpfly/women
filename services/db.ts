@@ -1,5 +1,6 @@
 import { PlayerProfile, UserStory } from '../types';
 import { INITIAL_STORIES } from '../data/stories';
+import { statsTracker, PlatformStats } from '../utils/statsTracker';
 
 // Environment variables (Disabled for static mode)
 const API_KEY = "";
@@ -154,18 +155,36 @@ export const db = {
 
   // --- STATISTICS ---
   
-  async getGlobalStats(): Promise<{ totalUsers: number } | null> {
-      if (!API_KEY || !ENDPOINT) return null;
-      try {
-          const data = await mongoRequest('aggregate', PROFILE_COLLECTION, {
-              pipeline: [{ $count: "total" }]
-          });
-          if (data?.documents?.[0]) {
-              return { totalUsers: data.documents[0].total };
+  async getGlobalStats(): Promise<{ totalUsers: number; totalTestRounds: number; localCompletedRounds: number }> {
+      statsTracker.recordVisit();
+      const stats = statsTracker.getStats();
+
+      // 如果有外部云端支持，尝试读取
+      if (API_KEY && ENDPOINT) {
+          try {
+              const data = await mongoRequest('aggregate', PROFILE_COLLECTION, {
+                  pipeline: [{ $count: "total" }]
+              });
+              if (data?.documents?.[0]?.total) {
+                  return {
+                      totalUsers: data.documents[0].total,
+                      totalTestRounds: stats.totalTestRounds,
+                      localCompletedRounds: stats.localCompletedRounds
+                  };
+              }
+          } catch (e) {
+              // 降级使用本地平滑统计
           }
-      } catch (e) {
-          return null;
       }
-      return null;
+
+      return {
+          totalUsers: stats.visitorCount,
+          totalTestRounds: stats.totalTestRounds,
+          localCompletedRounds: stats.localCompletedRounds
+      };
+  },
+
+  recordTestCompletion(): number {
+      return statsTracker.incrementCompletedRounds();
   }
 }
