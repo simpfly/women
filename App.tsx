@@ -4,6 +4,7 @@ import { GameState, UserGender, AllergenLevel, Book, Category, PlayerProfile, Ac
 import { generateScenarios, generateParentingStory, preloadScenarios } from './services/geminiService'; 
 import { db } from './services/db';
 import Toast from './components/Toast';
+import FeministQuestionIcon from './components/FeministQuestionIcon';
 import { Microscope, RotateCcw, Activity, User, ArrowRight, Quote, BookOpen, Library, X, Lock, Fingerprint, PenLine, Award, Baby, BookA, Heart, MessageSquareHeart, Globe, Zap, Star, ShieldCheck, Users, Trophy, Clipboard, Briefcase, Home, MessageCircle, Sparkles, Info, Check } from 'lucide-react';
 import { soundManager } from './utils/sound';
 
@@ -1309,7 +1310,7 @@ const App: React.FC = () => {
         className="w-full max-w-md flex flex-col items-center mt-12 md:mt-0 relative z-10"
       >
         <div className="w-24 h-24 bg-white border-2 border-[#5b21b6] rounded-full flex items-center justify-center mb-8 shadow-[4px_4px_0px_0px_#5b21b6]">
-            <Microscope className="w-12 h-12 text-[#5b21b6]" aria-hidden="true" />
+            <FeministQuestionIcon className="w-14 h-14 text-neutral-900" />
         </div>
         <h1 className="text-3xl font-black text-[#2e1065] mb-2 tracking-tighter uppercase">女性主义过敏源筛查</h1>
         <p className="text-purple-600 font-mono text-sm mb-6 tracking-widest">FEMINISM ALLERGEN SCREENING</p>
