@@ -67,6 +67,13 @@ const modalFallback = (
   </div>
 );
 
+export type LoadingSpeedMode = 'immersive' | 'fast';
+
+const LOADING_DURATIONS: Record<LoadingSpeedMode, number> = {
+  immersive: 1800,
+  fast: 400
+};
+
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
     status: 'intro',
@@ -123,8 +130,52 @@ const App: React.FC = () => {
   const [selectedStoryTags, setSelectedStoryTags] = useState<string[]>([]);
   const [communityFeedback, setCommunityFeedback] = useState<string | null>(null);
   const [isSubmittingStory, setIsSubmittingStory] = useState(false);
-  const [supportedStoryIds, setSupportedStoryIds] = useState<string[]>([]);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+
+  // Loading Speed Preference ('immersive' | 'fast')
+  const [loadingSpeedMode, setLoadingSpeedMode] = useState<LoadingSpeedMode>(() => {
+    try {
+      const saved = localStorage.getItem('loading_speed_mode');
+      return (saved === 'fast' || saved === 'immersive') ? saved : 'immersive';
+    } catch {
+      return 'immersive';
+    }
+  });
+
+  const skipLoadingResolverRef = React.useRef<(() => void) | null>(null);
+
+  const waitForLoading = (ms: number) => {
+    return new Promise<void>((resolve) => {
+      let resolved = false;
+      const done = () => {
+        if (!resolved) {
+          resolved = true;
+          skipLoadingResolverRef.current = null;
+          resolve();
+        }
+      };
+      skipLoadingResolverRef.current = done;
+      window.setTimeout(done, ms);
+    });
+  };
+
+  const skipLoading = () => {
+    if (skipLoadingResolverRef.current) {
+      skipLoadingResolverRef.current();
+    }
+  };
+
+  const toggleLoadingSpeedMode = () => {
+    const nextMode: LoadingSpeedMode = loadingSpeedMode === 'immersive' ? 'fast' : 'immersive';
+    setLoadingSpeedMode(nextMode);
+    try {
+      localStorage.setItem('loading_speed_mode', nextMode);
+    } catch {
+      // ignore
+    }
+    soundManager.playClick();
+    setActiveToast(nextMode === 'immersive' ? '已切换至沉浸模式 (1.8s 名言阅读)' : '已切换至极速模式 (0.4s 快速过渡)');
+  };
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -324,6 +375,7 @@ const App: React.FC = () => {
     // Pick a new random quote for this loading session
     setQuoteIndex(Math.floor(Math.random() * FEMINIST_QUOTES.length));
     
+    const startTime = Date.now();
     try {
       // Pass playedScenarioIds to filtering
       const scenarios = await generateScenarios(gender, category, profile.playedScenarioIds);
@@ -333,6 +385,12 @@ const App: React.FC = () => {
           handleCategoryCompletion(category, gender);
           return;
       }
+
+      const targetDuration = LOADING_DURATIONS[loadingSpeedMode];
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, targetDuration - elapsed);
+
+      await waitForLoading(remaining);
 
       setGameState(prev => ({
         ...prev,
@@ -411,8 +469,15 @@ const App: React.FC = () => {
       const childGender: UserGender = Math.random() > 0.5 ? 'female' : 'male';
       setGameState(prev => ({ ...prev, status: 'loading', childGender }));
       
+      const startTime = Date.now();
       try {
           const storyEvents = await generateParentingStory(childGender);
+          const targetDuration = LOADING_DURATIONS[loadingSpeedMode];
+          const elapsed = Date.now() - startTime;
+          const remaining = Math.max(0, targetDuration - elapsed);
+
+          await waitForLoading(remaining);
+
           setGameState(prev => ({
               ...prev,
               status: 'story-intro', // Transition to reveal gender first
@@ -1133,6 +1198,36 @@ const App: React.FC = () => {
                         在RPG模式中，你将扮演监护人。你的每一次选择都将决定孩子是成为<span className="font-bold text-[#5b21b6]">传统的顺从者</span>还是<span className="font-bold text-[#5b21b6]">自由的灯塔</span>。
                     </p>
                 </div>
+
+                {/* Motion & Loading Preferences */}
+                <div>
+                    <h3 className="text-[#5b21b6] font-bold border-b-2 border-[#5b21b6] inline-block mb-2">04. 过场动画与加载速度</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                        为关怀神经多样性人群并满足不同作答习惯，你可以自由调节过场节奏（任何模式下均可轻触屏幕直接跳过）：
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => { setLoadingSpeedMode('immersive'); try { localStorage.setItem('loading_speed_mode', 'immersive'); } catch {} soundManager.playClick(); }}
+                            className={`p-3 border-2 text-left transition-all ${loadingSpeedMode === 'immersive' ? 'border-[#5b21b6] bg-purple-50 shadow-[3px_3px_0px_0px_#5b21b6]' : 'border-gray-200 bg-white hover:border-[#5b21b6]'}`}
+                        >
+                            <p className="font-bold text-xs text-[#2e1065] flex items-center gap-1">
+                                📖 沉浸模式 (1.8s)
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">从容阅读女性主义名言，配平滑进度条</p>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setLoadingSpeedMode('fast'); try { localStorage.setItem('loading_speed_mode', 'fast'); } catch {} soundManager.playClick(); }}
+                            className={`p-3 border-2 text-left transition-all ${loadingSpeedMode === 'fast' ? 'border-[#5b21b6] bg-purple-50 shadow-[3px_3px_0px_0px_#5b21b6]' : 'border-gray-200 bg-white hover:border-[#5b21b6]'}`}
+                        >
+                            <p className="font-bold text-xs text-[#2e1065] flex items-center gap-1">
+                                ⚡ 极速模式 (0.4s)
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">快速轻量过渡，适合高效连续作答</p>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div className="p-4 bg-purple-50 text-center border-t border-purple-100">
@@ -1160,6 +1255,14 @@ const App: React.FC = () => {
       )}
       {/* Top Bar Actions */}
       <div className="absolute top-6 right-6 flex gap-3 z-20">
+         <button 
+            onClick={toggleLoadingSpeedMode}
+            className={`p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group flex items-center justify-center`}
+            aria-label={loadingSpeedMode === 'immersive' ? "当前过场：沉浸模式 (1.8s)，点击切换为极速模式" : "当前过场：极速模式 (0.4s)，点击切换为沉浸模式"}
+            title={loadingSpeedMode === 'immersive' ? "过场速度：沉浸模式 (1.8s 名言阅读)" : "过场速度：极速模式 (0.4s 快速过渡)"}
+         >
+            <Zap className={`w-5 h-5 ${loadingSpeedMode === 'fast' ? 'text-amber-500 fill-amber-500 group-hover:text-amber-300' : 'text-[#5b21b6] group-hover:text-white'}`} />
+         </button>
          <button 
             onClick={() => setShowTutorial(true)}
             className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
@@ -1297,6 +1400,21 @@ const App: React.FC = () => {
             <div className="w-10"></div>
         </div>
 
+        {/* Loading Speed Toggle Pill */}
+        <div className="flex items-center justify-between bg-white border border-[#5b21b6] px-3 py-1.5 shadow-[2px_2px_0px_0px_#5b21b6] text-xs font-mono">
+            <span className="text-gray-500">过场节奏:</span>
+            <button
+                type="button"
+                onClick={toggleLoadingSpeedMode}
+                className="text-[#5b21b6] font-bold hover:underline flex items-center gap-1.5"
+                title="点击切换过场模式"
+            >
+                <Zap className={`w-3.5 h-3.5 ${loadingSpeedMode === 'fast' ? 'text-amber-500 fill-amber-500' : 'text-[#5b21b6]'}`} />
+                <span>{loadingSpeedMode === 'immersive' ? '沉浸模式 (1.8s)' : '极速模式 (0.4s)'}</span>
+                <span className="text-[10px] text-gray-400">切换</span>
+            </button>
+        </div>
+
         <div className={`grid gap-4 ${gameState.appMode === 'parenting' ? 'grid-cols-1' : 'grid-cols-2'}`}>
             {[
                 { id: 'RANDOM', label: '随机混合', icon: <Sparkles className="w-6 h-6" />, desc: "综合测试" },
@@ -1346,25 +1464,81 @@ const App: React.FC = () => {
     </div>
   );
 
-  const renderLoading = () => (
-    <div className="min-h-screen bg-[#5b21b6] flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 pattern-dots opacity-10"></div>
+  const renderLoading = () => {
+    const isFast = loadingSpeedMode === 'fast';
+    const durationSec = LOADING_DURATIONS[loadingSpeedMode] / 1000;
+
+    return (
+      <div 
+        onClick={skipLoading}
+        className="min-h-screen bg-purple-50 pattern-diagonal-lines flex flex-col items-center justify-center p-6 text-center cursor-pointer select-none relative overflow-hidden"
+        title="点击任意处直接进入"
+      >
         <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-white border-t-transparent rounded-full mb-8 relative z-10"
-        />
-        <div className="relative z-10 max-w-lg">
-            <Quote className="w-8 h-8 text-purple-300 mb-4 mx-auto opacity-50" />
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-4 leading-relaxed font-serif">
-                "{FEMINIST_QUOTES[quoteIndex].text}"
-            </h3>
-            <p className="text-purple-200 font-mono text-sm uppercase tracking-widest">
-                — {FEMINIST_QUOTES[quoteIndex].author}
-            </p>
-        </div>
-    </div>
-  );
+          initial={{ opacity: 0, y: 16, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="bg-white border-2 border-[#5b21b6] p-8 md:p-10 shadow-[8px_8px_0px_0px_#5b21b6] max-w-lg w-full relative"
+          onClick={(e) => {
+            skipLoading();
+          }}
+        >
+          {/* Header Tag */}
+          <div className="flex items-center justify-between border-b-2 border-purple-100 pb-4 mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#5b21b6] animate-pulse" />
+              <span className="text-xs font-mono font-bold text-[#5b21b6] uppercase tracking-wider">
+                样本解析中 (Screening)
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-[#5b21b6] bg-purple-50 px-2.5 py-0.5 border border-[#5b21b6] font-bold">
+              {isFast ? '极速 0.4s' : '沉浸 1.8s'}
+            </span>
+          </div>
+
+          {/* Quote Body */}
+          <Quote className="w-8 h-8 text-[#5b21b6] mx-auto mb-4 opacity-40" />
+          <motion.h3 
+            key={quoteIndex}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="text-lg md:text-xl font-bold text-[#2e1065] mb-4 leading-relaxed font-serif"
+          >
+            "{FEMINIST_QUOTES[quoteIndex].text}"
+          </motion.h3>
+          <p className="text-purple-600 font-mono text-xs uppercase tracking-widest mb-8">
+            — {FEMINIST_QUOTES[quoteIndex].author}
+          </p>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-purple-100 h-2 border border-[#5b21b6] overflow-hidden mb-4">
+            <motion.div 
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: durationSec, ease: "linear" }}
+              className="h-full bg-[#5b21b6]"
+            />
+          </div>
+
+          {/* Bottom Hint */}
+          <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono">
+            <span className="opacity-80">点击任意处立即开始</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                skipLoading();
+              }}
+              className="text-[#5b21b6] font-bold flex items-center gap-1 hover:underline"
+            >
+              跳过 <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
 
   const renderPlaying = () => {
       const isStory = gameState.status === 'story-playing';
@@ -1644,24 +1818,35 @@ const App: React.FC = () => {
       {/* Tutorial Modal */}
       {showTutorial && renderTutorialModal()}
 
-      {gameState.status === 'intro' && renderIntro()}
-      {gameState.status === 'profile' && renderProfile()}
-      {gameState.status === 'bookshelf' && renderBookshelf()}
-      {gameState.status === 'dictionary' && renderDictionary()}
-      {gameState.status === 'her-story' && renderHerStory()}
-      {gameState.status === 'scenario-select' && renderScenarioSelect()}
-      {gameState.status === 'loading' && renderLoading()}
-      {(gameState.status === 'playing' || gameState.status === 'story-playing') && renderPlaying()}
-      {gameState.status === 'story-intro' && renderStoryIntro()}
-      {gameState.status === 'story-result' && renderStoryResult()}
-      {gameState.status === 'result' && renderResult()}
-      {gameState.status === 'error' && (
-          <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
-              <h2 className="text-2xl font-bold text-red-600 mb-4">连接错误</h2>
-              <p className="mb-4">无法连接到分析引擎。</p>
-              <button onClick={loadIntro} className="px-4 py-2 bg-[#5b21b6] text-white rounded">返回</button>
-          </div>
-      )}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={gameState.status}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="w-full min-h-screen"
+        >
+          {gameState.status === 'intro' && renderIntro()}
+          {gameState.status === 'profile' && renderProfile()}
+          {gameState.status === 'bookshelf' && renderBookshelf()}
+          {gameState.status === 'dictionary' && renderDictionary()}
+          {gameState.status === 'her-story' && renderHerStory()}
+          {gameState.status === 'scenario-select' && renderScenarioSelect()}
+          {gameState.status === 'loading' && renderLoading()}
+          {(gameState.status === 'playing' || gameState.status === 'story-playing') && renderPlaying()}
+          {gameState.status === 'story-intro' && renderStoryIntro()}
+          {gameState.status === 'story-result' && renderStoryResult()}
+          {gameState.status === 'result' && renderResult()}
+          {gameState.status === 'error' && (
+              <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
+                  <h2 className="text-2xl font-bold text-red-600 mb-4">连接错误</h2>
+                  <p className="mb-4">无法连接到分析引擎。</p>
+                  <button onClick={loadIntro} className="px-4 py-2 bg-[#5b21b6] text-white rounded">返回</button>
+              </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Report Modal */}
       {showReportModal && (

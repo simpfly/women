@@ -85,10 +85,10 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
     <div className="w-full max-w-md mx-auto md:max-w-2xl">
       <motion.div
         key={isStoryMode ? storyEvent?.age : scenario?.id}
-        initial={{ opacity: 0, y: 50, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, x: -100, rotate: -10 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.24, ease: "easeOut" }}
         className="bg-white rounded-none shadow-[8px_8px_0px_0px_#5b21b6] overflow-hidden border-2 border-[#5b21b6] flex flex-col min-h-[500px]"
         role="article"
       >

@@ -73,7 +73,12 @@ export const preloadScenarios = async (gender: UserGender = 'female') => {
     // 静态模式，瞬发，无需缓冲
 };
 
-export const generateScenarios = async (gender: UserGender, category: Category | 'RANDOM' = 'RANDOM', playedIds: string[] = []): Promise<Scenario[]> => {
+export const generateScenarios = async (
+  gender: UserGender, 
+  category: Category | 'RANDOM' = 'RANDOM', 
+  playedIds: string[] = [],
+  delayMs: number = 0
+): Promise<Scenario[]> => {
   // 纯静态化策略：所有题目直接从静态数据池拉取
   const staticData = getRandomStaticScenarios(gender, category, playedIds, 5);
   
@@ -82,11 +87,17 @@ export const generateScenarios = async (gender: UserGender, category: Category |
       return []; 
   }
 
-  // 模拟稍微真实的加载感，但不再需要等大模型
-  return new Promise(resolve => setTimeout(() => resolve(staticData), 500));
+  if (delayMs > 0) {
+    return new Promise(resolve => setTimeout(() => resolve(staticData), delayMs));
+  }
+  return staticData;
 };
 
-export const generateParentingStory = async (childGender: UserGender): Promise<StoryEvent[]> => {
+export const generateParentingStory = async (childGender: UserGender, delayMs: number = 0): Promise<StoryEvent[]> => {
     const story = buildStoryFromScenarios(childGender);
-    return new Promise(resolve => setTimeout(() => resolve(story), 500));
+    if (delayMs > 0) {
+      return new Promise(resolve => setTimeout(() => resolve(story), delayMs));
+    }
+    return story;
 }
+
