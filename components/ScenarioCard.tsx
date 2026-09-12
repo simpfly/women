@@ -97,28 +97,28 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.24, ease: "easeOut" }}
-        className="bg-white rounded-none shadow-[8px_8px_0px_0px_#5b21b6] overflow-hidden border-2 border-[#5b21b6] flex flex-col min-h-[500px]"
+        className="bg-white rounded-none shadow-[4px_4px_0px_0px_#5b21b6] sm:shadow-[8px_8px_0px_0px_#5b21b6] overflow-hidden border-2 border-[#5b21b6] flex flex-col min-h-[360px] sm:min-h-[500px]"
         role="article"
       >
         {/* Card Header */}
-        <div className="bg-purple-50 p-4 flex items-center justify-between border-b-2 border-[#5b21b6]">
-            <div className="flex items-center gap-2 px-3 py-1 bg-white border border-[#5b21b6] text-[10px] font-black text-[#5b21b6] uppercase tracking-wider">
+        <div className="bg-purple-50 p-3 sm:p-4 flex items-center justify-between border-b-2 border-[#5b21b6]">
+            <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1 bg-white border border-[#5b21b6] text-[10px] font-black text-[#5b21b6] uppercase tracking-wider">
                 {isStoryMode ? <Sparkles className="w-4 h-4 text-[#5b21b6]"/> : <CategoryIcon category={scenario!.category} />}
                 <span>{headerTitle}</span>
             </div>
-            <div className={`text-[10px] text-[#5b21b6] font-mono tracking-widest font-bold ${isStoryMode ? 'bg-[#5b21b6] text-white' : 'opacity-60'}`}>
+            <div className={`text-[10px] text-[#5b21b6] font-mono tracking-widest font-bold ${isStoryMode ? 'bg-[#5b21b6] text-white px-2 py-0.5' : 'opacity-60'}`}>
                 {headerSub}
             </div>
         </div>
 
         {/* Content */}
-        <div className="p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center bg-white relative">
+        <div className="p-5 sm:p-8 md:p-12 flex-1 flex flex-col justify-center items-center text-center bg-white relative">
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-200 to-transparent opacity-50"></div>
-            <div className="mb-8 opacity-10 hidden md:block" aria-hidden="true">
+            <div className="mb-4 sm:mb-8 opacity-10 hidden md:block" aria-hidden="true">
                 {isStoryMode ? (
-                     <Baby className="w-24 h-24 text-[#5b21b6]" />
+                     <Baby className="w-16 h-16 sm:w-24 sm:h-24 text-[#5b21b6]" />
                 ) : (
-                    <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#5b21b6" strokeWidth="1" className="mx-auto">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#5b21b6" strokeWidth="1" className="mx-auto sm:w-[100px] sm:h-[100px]">
                         <path d="M2 12h5" />
                         <path d="M17 12h5" />
                         <path d="M7 12a5 5 0 0 1 5-5 5 5 0 0 1 5 5" />
@@ -127,7 +127,7 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                     </svg>
                 )}
             </div>
-          <p className="text-xl md:text-2xl font-bold text-[#2e1065] leading-relaxed tracking-tight">
+          <p className="text-lg sm:text-xl md:text-2xl font-bold text-[#2e1065] leading-relaxed tracking-tight">
             "{content}"
           </p>
         </div>
@@ -139,12 +139,12 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                     <button
                         key={idx}
                         onClick={() => handleOptionClick(idx)}
-                        className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4 select-none"
+                        className="p-3.5 sm:p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-3 sm:gap-4 select-none"
                     >
-                         <span className="bg-[#5b21b6] text-white font-mono text-xs w-6 h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
+                         <span className="bg-[#5b21b6] text-white font-mono text-[11px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
                              {String.fromCharCode(65 + idx)}
                          </span>
-                         <span className="text-sm md:text-base leading-tight">{opt.text}</span>
+                         <span className="text-xs sm:text-sm md:text-base leading-snug sm:leading-tight">{opt.text}</span>
                     </button>
                 ))}
              </div>
@@ -155,12 +155,12 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                         <button
                             key={idx}
                             onClick={() => handleOptionClick(opt.score)}
-                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4 select-none"
+                            className="p-3.5 sm:p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-3 sm:gap-4 select-none"
                         >
-                             <span className="bg-[#5b21b6] text-white font-mono text-xs w-6 h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
+                             <span className="bg-[#5b21b6] text-white font-mono text-[11px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
                                  {String.fromCharCode(65 + idx)}
                              </span>
-                             <span className="text-sm md:text-base leading-tight">{opt.text}</span>
+                             <span className="text-xs sm:text-sm md:text-base leading-snug sm:leading-tight">{opt.text}</span>
                         </button>
                     ))
                 ) : (
@@ -172,10 +172,10 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                         <button
                             key={idx}
                             onClick={() => handleOptionClick(option.score)}
-                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-center justify-between select-none"
+                            className="p-3.5 sm:p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-center justify-between select-none"
                         >
-                            <span className="text-sm md:text-base leading-tight uppercase tracking-widest font-black">{option.text}</span>
-                            <span className="text-xl group-hover:scale-110 transition-transform opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100">{option.icon}</span>
+                            <span className="text-xs sm:text-sm md:text-base leading-snug sm:leading-tight uppercase tracking-wider sm:tracking-widest font-black">{option.text}</span>
+                            <span className="text-lg sm:text-xl group-hover:scale-110 transition-transform opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100">{option.icon}</span>
                         </button>
                     ))
                 )}

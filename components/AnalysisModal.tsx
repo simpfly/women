@@ -87,24 +87,24 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
       const isNeutral = scoreVal === 1;
 
       return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none">
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm select-none">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col select-none"
+                className="bg-white border-2 border-[#5b21b6] w-full max-w-lg max-h-[90vh] shadow-[4px_4px_0px_0px_rgba(91,33,182,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col select-none"
             >
-                <div className={`p-6 text-center border-b-2 border-[#5b21b6] select-none ${isGood ? 'bg-[#5b21b6] text-white' : isNeutral ? 'bg-purple-100 text-[#5b21b6]' : 'bg-gray-100 text-gray-500'}`}>
-                    <UserCheck className="w-8 h-8 mx-auto mb-2" />
-                    <h2 className="text-xl font-black uppercase tracking-widest select-none">
+                <div className={`p-4 sm:p-6 text-center border-b-2 border-[#5b21b6] select-none shrink-0 ${isGood ? 'bg-[#5b21b6] text-white' : isNeutral ? 'bg-purple-100 text-[#5b21b6]' : 'bg-gray-100 text-gray-500'}`}>
+                    <UserCheck className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1.5 sm:mb-2" />
+                    <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest select-none">
                         {isGood ? "成长轨迹优化" : isNeutral ? "常规成长路径" : "刻板印象加深"}
                     </h2>
                 </div>
                 
-                <div className="p-8 text-center select-none">
-                    <p className="text-[#2e1065] text-lg font-medium leading-relaxed mb-6 select-none">
+                <div className="p-5 sm:p-8 text-center select-none overflow-y-auto flex-1">
+                    <p className="text-[#2e1065] text-base sm:text-lg font-medium leading-relaxed mb-4 sm:mb-6 select-none">
                         "{storyFeedback.consequence}"
                     </p>
-                    <div className="h-px bg-purple-100 mb-6"></div>
+                    <div className="h-px bg-purple-100 mb-4 sm:mb-6"></div>
                     <p className="text-xs text-purple-400 font-mono uppercase tracking-widest select-none">
                         {isGood ? "+2 分 (Empowered)" : isNeutral ? "+1 分 (Neutral)" : "+0 分 (Reinforced)"}
                     </p>
@@ -112,7 +112,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
                 <button
                     onClick={onNext}
-                    className="w-full py-4 bg-white hover:bg-purple-50 text-[#5b21b6] font-bold uppercase tracking-widest border-t-2 border-[#5b21b6] flex items-center justify-center gap-2 select-none"
+                    className="w-full py-3.5 sm:py-4 bg-white hover:bg-purple-50 text-[#5b21b6] font-bold uppercase tracking-widest border-t-2 border-[#5b21b6] flex items-center justify-center gap-2 select-none shrink-0 text-sm sm:text-base"
                 >
                     下一阶段 <ArrowRight className="w-4 h-4" />
                 </button>
@@ -124,16 +124,16 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   // --- NORMAL MODE RENDER ---
   return (
     <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm select-none"
         role="dialog"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col max-h-[90vh] select-none"
+        className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[4px_4px_0px_0px_rgba(91,33,182,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col max-h-[90vh] select-none"
       >
         {/* Header Color Logic */}
-        <div className={`p-6 text-center relative overflow-hidden border-b-2 border-[#5b21b6] 
+        <div className={`p-4 sm:p-6 text-center relative overflow-hidden border-b-2 border-[#5b21b6] shrink-0
             ${resultStatus === 'success' ? 'bg-[#5b21b6] text-white' : 
               resultStatus === 'partial' ? 'bg-purple-200 text-[#5b21b6]' : 
               'bg-white text-[#5b21b6] pattern-diagonal-lines'}`}>
@@ -249,11 +249,11 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
             )}
         </div>
 
-        <div className="p-4 bg-white border-t-2 border-[#5b21b6]">
+        <div className="p-3 sm:p-4 bg-white border-t-2 border-[#5b21b6] shrink-0">
             <button
                 onClick={onNext}
                 aria-label="继续下一个"
-                className="w-full py-4 bg-[#5b21b6] hover:bg-[#4c1d95] text-white font-bold uppercase tracking-widest transition-colors shadow-lg active:translate-y-1 transform duration-100 focus:outline-none focus:ring-2 focus:ring-[#5b21b6] focus:ring-offset-2"
+                className="w-full py-3.5 sm:py-4 bg-[#5b21b6] hover:bg-[#4c1d95] text-white font-bold uppercase tracking-widest transition-colors shadow-lg active:translate-y-1 transform duration-100 focus:outline-none focus:ring-2 focus:ring-[#5b21b6] focus:ring-offset-2 text-sm sm:text-base"
             >
                 继续筛查
             </button>

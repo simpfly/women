@@ -122,6 +122,7 @@ const App: React.FC = () => {
   // New States for Features
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
   const [stories, setStories] = useState<UserStory[]>([]);
+  const [supportedStoryIds, setSupportedStoryIds] = useState<string[]>([]);
   const [empowermentFilter, setEmpowermentFilter] = useState<EmpowermentType | 'ALL'>('ALL');
   const [storyDraft, setStoryDraft] = useState('');
   const [selectedStoryTags, setSelectedStoryTags] = useState<string[]>([]);
@@ -846,21 +847,21 @@ const App: React.FC = () => {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: 50 }}
                               onClick={e => e.stopPropagation()}
-                              className="bg-white w-full max-w-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl rounded-sm"
+                              className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row shadow-2xl rounded-sm"
                           >
-                               <div className="w-full md:w-1/3 p-8 flex items-center justify-center relative" style={{ backgroundColor: selectedBook.color }}>
+                               <div className="w-full md:w-1/3 p-6 sm:p-8 flex items-center justify-center relative" style={{ backgroundColor: selectedBook.color }}>
                                     <div className="text-white text-center">
-                                        <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-80" />
-                                        <h2 className="text-2xl font-serif font-bold mb-2">{selectedBook.title}</h2>
-                                        <p className="opacity-80">{selectedBook.author}</p>
+                                        <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-80" />
+                                        <h2 className="text-xl sm:text-2xl font-serif font-bold mb-2">{selectedBook.title}</h2>
+                                        <p className="opacity-80 text-sm">{selectedBook.author}</p>
                                     </div>
                                </div>
-                               <div className="w-full md:w-2/3 p-8 bg-white relative">
+                               <div className="w-full md:w-2/3 p-6 sm:p-8 bg-white relative">
                                     <button onClick={() => setSelectedBook(null)} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full">
                                         <X className="w-5 h-5 text-gray-500" />
                                     </button>
-                                    <Quote className="w-8 h-8 text-gray-200 mb-4" />
-                                    <blockquote className="text-lg font-serif text-[#2e1065] mb-6 pl-4 border-l-4 border-purple-200 italic">
+                                    <Quote className="w-6 h-6 sm:w-8 sm:h-8 text-gray-200 mb-3 sm:mb-4" />
+                                    <blockquote className="text-base sm:text-lg font-serif text-[#2e1065] mb-4 sm:mb-6 pl-4 border-l-4 border-purple-200 italic">
                                         "{selectedBook.quote}"
                                     </blockquote>
                                     <h4 className="font-bold text-xs uppercase text-gray-400 mb-2">简介</h4>
@@ -879,23 +880,23 @@ const App: React.FC = () => {
   const renderDictionary = () => (
       <div className="min-h-screen bg-purple-50 flex flex-col md:flex-row">
           {/* Sidebar */}
-          <div className="w-full md:w-64 bg-[#5b21b6] text-white p-6 flex flex-col shrink-0">
-               <button onClick={loadIntro} className="flex items-center gap-2 font-bold mb-8 hover:opacity-80">
+          <div className="w-full md:w-64 bg-[#5b21b6] text-white p-4 sm:p-6 flex flex-col shrink-0">
+               <button onClick={loadIntro} className="flex items-center gap-2 font-bold mb-4 sm:mb-8 hover:opacity-80 text-sm sm:text-base">
                   <ArrowRight className="w-4 h-4 rotate-180" /> 返回大厅
                </button>
-               <h2 className="text-xl font-black uppercase tracking-widest mb-6 flex items-center gap-2">
-                   <BookA className="w-6 h-6" /> 词典
+               <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest mb-3 sm:mb-6 flex items-center gap-2">
+                   <BookA className="w-5 h-5 sm:w-6 sm:h-6" /> 词典
                </h2>
-               <div className="space-y-2">
+               <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
                    <button 
                       onClick={() => { setDictionaryTab('ACADEMIC'); setSelectedTerm(null); }}
-                      className={`w-full text-left px-4 py-3 rounded-sm transition-all ${dictionaryTab === 'ACADEMIC' ? 'bg-white text-[#5b21b6] font-bold shadow-md' : 'hover:bg-white/10 opacity-70'}`}
+                      className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 rounded-sm transition-all text-xs sm:text-sm ${dictionaryTab === 'ACADEMIC' ? 'bg-white text-[#5b21b6] font-bold shadow-md' : 'hover:bg-white/10 opacity-70'}`}
                    >
                        社会学理论 (Theory)
                    </button>
                    <button 
                       onClick={() => { setDictionaryTab('INTERNET'); setSelectedTerm(null); }}
-                      className={`w-full text-left px-4 py-3 rounded-sm transition-all ${dictionaryTab === 'INTERNET' ? 'bg-white text-[#5b21b6] font-bold shadow-md' : 'hover:bg-white/10 opacity-70'}`}
+                      className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 rounded-sm transition-all text-xs sm:text-sm ${dictionaryTab === 'INTERNET' ? 'bg-white text-[#5b21b6] font-bold shadow-md' : 'hover:bg-white/10 opacity-70'}`}
                    >
                        互联网黑话 (Slang)
                    </button>
@@ -903,7 +904,7 @@ const App: React.FC = () => {
           </div>
 
           {/* List Area */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-12">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-12">
                <div className="max-w-3xl mx-auto">
                     {!selectedTerm ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1108,32 +1109,43 @@ const App: React.FC = () => {
                              </div>
 
                              {/* Story List */}
-                             {stories.map((story) => {
-                                 const hasSupported = supportedStoryIds.includes(story.id);
-                                 return (
-                                     <div key={story.id} className="bg-white p-6 rounded-sm shadow-sm">
-                                         <div className="flex gap-2 mb-3">
-                                             {story.tags.map(t => (
-                                                 <span key={t} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full">#{t}</span>
-                                             ))}
+                             {stories.length === 0 ? (
+                                 <div className="bg-white p-8 rounded-sm shadow-sm text-center text-gray-500">
+                                     <MessageSquareHeart className="w-10 h-10 mx-auto text-purple-300 mb-2" />
+                                     <p className="font-bold text-sm">暂无故事</p>
+                                     <p className="text-xs text-gray-400 mt-1">来写下你的第一个觉醒或经历瞬间吧～</p>
+                                 </div>
+                             ) : (
+                                 stories.map((story) => {
+                                     const hasSupported = supportedStoryIds.includes(story.id);
+                                     const tags = Array.isArray(story.tags) ? story.tags : [];
+                                     return (
+                                         <div key={story.id} className="bg-white p-6 rounded-sm shadow-sm">
+                                             {tags.length > 0 && (
+                                                 <div className="flex gap-2 mb-3">
+                                                     {tags.map(t => (
+                                                         <span key={t} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full">#{t}</span>
+                                                     ))}
+                                                 </div>
+                                             )}
+                                             <p className="text-gray-800 leading-relaxed mb-4 whitespace-pre-line">
+                                                 {story.content}
+                                             </p>
+                                             <div className="flex items-center justify-between text-xs text-gray-400">
+                                                 <span>{story.timestamp ? new Date(story.timestamp).toLocaleDateString('zh-CN') : ''}</span>
+                                                 <button 
+                                                    onClick={() => handleSupportStory(story.id)}
+                                                    disabled={hasSupported}
+                                                    className={`flex items-center gap-1 transition-colors group ${hasSupported ? 'text-[#5b21b6] cursor-default' : 'hover:text-[#5b21b6]'}`}
+                                                 >
+                                                     <Heart className={`w-4 h-4 ${story.supportCount > 0 ? 'fill-purple-50 text-purple-500' : ''} ${hasSupported ? '' : 'group-hover:scale-110 transition-transform'}`} />
+                                                     <span>{story.supportCount} {hasSupported ? '已共鸣' : '共鸣'}</span>
+                                                 </button>
+                                             </div>
                                          </div>
-                                         <p className="text-gray-800 leading-relaxed mb-4 whitespace-pre-line">
-                                             {story.content}
-                                         </p>
-                                         <div className="flex items-center justify-between text-xs text-gray-400">
-                                             <span>{new Date(story.timestamp).toLocaleDateString('zh-CN')}</span>
-                                             <button 
-                                                onClick={() => handleSupportStory(story.id)}
-                                                disabled={hasSupported}
-                                                className={`flex items-center gap-1 transition-colors group ${hasSupported ? 'text-[#5b21b6] cursor-default' : 'hover:text-[#5b21b6]'}`}
-                                             >
-                                                 <Heart className={`w-4 h-4 ${story.supportCount > 0 ? 'fill-purple-50 text-purple-500' : ''} ${hasSupported ? '' : 'group-hover:scale-110 transition-transform'}`} />
-                                                 <span>{story.supportCount} {hasSupported ? '已共鸣' : '共鸣'}</span>
-                                             </button>
-                                         </div>
-                                     </div>
-                                 );
-                             })}
+                                     );
+                                 })
+                             )}
                         </div>
                     )}
                 </div>
@@ -1221,50 +1233,104 @@ const App: React.FC = () => {
     const isReportUnlocked = answeredCount >= targetCount;
 
     return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-purple-50 relative pattern-diagonal-lines">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 pt-20 pb-8 sm:p-6 text-center bg-purple-50 relative pattern-diagonal-lines">
       {statusNotice && (
-        <div className="absolute top-6 left-1/2 z-30 -translate-x-1/2 bg-white border border-[#5b21b6] px-4 py-2 shadow-[4px_4px_0px_0px_#5b21b6] text-xs font-bold text-[#5b21b6]">
+        <div className="absolute top-3 sm:top-6 left-1/2 z-30 -translate-x-1/2 bg-white border border-[#5b21b6] px-3 sm:px-4 py-1.5 sm:py-2 shadow-[2px_2px_0px_0px_#5b21b6] sm:shadow-[4px_4px_0px_0px_#5b21b6] text-xs font-bold text-[#5b21b6] max-w-[90vw] truncate">
           {statusNotice}
         </div>
       )}
       {/* Top Bar Actions */}
-      <div className="absolute top-6 right-6 flex gap-3 z-20">
-         <button 
-            onClick={() => setShowTutorial(true)}
-            className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
-            aria-label="操作指南"
-         >
-            <Info className="w-5 h-5 text-[#5b21b6] group-hover:text-white" />
-         </button>
-         <button 
-            onClick={() => setGameState(prev => ({ ...prev, status: 'her-story' }))}
-            className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
-            aria-label="女子故事"
-         >
-            <MessageSquareHeart className="w-5 h-5 text-[#5b21b6] group-hover:text-white" />
-         </button>
-         <button 
-            onClick={() => setGameState(prev => ({ ...prev, status: 'profile' }))}
-            className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
-            aria-label="玩家档案"
-         >
-            <Fingerprint className="w-5 h-5 text-[#5b21b6] group-hover:text-white" />
-         </button>
-         <button 
-            onClick={() => setGameState(prev => ({ ...prev, status: 'dictionary' }))}
-            className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
-            aria-label="女性主义词典"
-         >
-            <BookA className="w-5 h-5 text-[#5b21b6] group-hover:text-white" />
-         </button>
-         {profile.unlockedBookIds.length > 0 && (
+      <div className="absolute top-3 right-3 sm:top-6 sm:right-6 flex gap-1.5 sm:gap-3 z-20">
+         <div className="relative group">
             <button 
-            onClick={() => setGameState(prev => ({ ...prev, status: 'bookshelf' }))}
-            className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
-            aria-label="我的书架"
+               onClick={() => setShowTutorial(true)}
+               className="p-2 sm:p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[2px_2px_0px_0px_#5b21b6] sm:shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white flex items-center justify-center"
+               aria-label="操作指南"
+               title="操作指南"
             >
-            <Library className="w-5 h-5 text-[#5b21b6] group-hover:text-white" />
+               <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#5b21b6] group-hover:text-white transition-colors" />
             </button>
+            <div 
+               role="tooltip"
+               className="hidden sm:block absolute top-full left-1/2 -translate-x-1/2 mt-2.5 px-2.5 py-1 bg-[#2e1065] text-white text-xs font-bold whitespace-nowrap rounded-sm border border-[#5b21b6] shadow-[2px_2px_0px_0px_rgba(91,33,182,0.6)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-150 z-30 select-none"
+            >
+               操作指南
+               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#2e1065] border-t border-l border-[#5b21b6] rotate-45"></div>
+            </div>
+         </div>
+
+         <div className="relative group">
+            <button 
+               onClick={() => setGameState(prev => ({ ...prev, status: 'her-story' }))}
+               className="p-2 sm:p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[2px_2px_0px_0px_#5b21b6] sm:shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white flex items-center justify-center"
+               aria-label="女子故事"
+               title="女子故事"
+            >
+               <MessageSquareHeart className="w-4 h-4 sm:w-5 sm:h-5 text-[#5b21b6] group-hover:text-white transition-colors" />
+            </button>
+            <div 
+               role="tooltip"
+               className="hidden sm:block absolute top-full left-1/2 -translate-x-1/2 mt-2.5 px-2.5 py-1 bg-[#2e1065] text-white text-xs font-bold whitespace-nowrap rounded-sm border border-[#5b21b6] shadow-[2px_2px_0px_0px_rgba(91,33,182,0.6)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-150 z-30 select-none"
+            >
+               女子故事
+               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#2e1065] border-t border-l border-[#5b21b6] rotate-45"></div>
+            </div>
+         </div>
+
+         <div className="relative group">
+            <button 
+               onClick={() => setGameState(prev => ({ ...prev, status: 'profile' }))}
+               className="p-2 sm:p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[2px_2px_0px_0px_#5b21b6] sm:shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white flex items-center justify-center"
+               aria-label="玩家档案"
+               title="玩家档案"
+            >
+               <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5 text-[#5b21b6] group-hover:text-white transition-colors" />
+            </button>
+            <div 
+               role="tooltip"
+               className="hidden sm:block absolute top-full left-1/2 -translate-x-1/2 mt-2.5 px-2.5 py-1 bg-[#2e1065] text-white text-xs font-bold whitespace-nowrap rounded-sm border border-[#5b21b6] shadow-[2px_2px_0px_0px_rgba(91,33,182,0.6)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-150 z-30 select-none"
+            >
+               玩家档案
+               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#2e1065] border-t border-l border-[#5b21b6] rotate-45"></div>
+            </div>
+         </div>
+
+         <div className="relative group">
+            <button 
+               onClick={() => setGameState(prev => ({ ...prev, status: 'dictionary' }))}
+               className="p-2 sm:p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[2px_2px_0px_0px_#5b21b6] sm:shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white flex items-center justify-center"
+               aria-label="女性主义词典"
+               title="女性主义词典"
+            >
+               <BookA className="w-4 h-4 sm:w-5 sm:h-5 text-[#5b21b6] group-hover:text-white transition-colors" />
+            </button>
+            <div 
+               role="tooltip"
+               className="hidden sm:block absolute top-full left-1/2 -translate-x-1/2 mt-2.5 px-2.5 py-1 bg-[#2e1065] text-white text-xs font-bold whitespace-nowrap rounded-sm border border-[#5b21b6] shadow-[2px_2px_0px_0px_rgba(91,33,182,0.6)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-150 z-30 select-none"
+            >
+               女性主义词典
+               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#2e1065] border-t border-l border-[#5b21b6] rotate-45"></div>
+            </div>
+         </div>
+
+         {profile.unlockedBookIds.length > 0 && (
+            <div className="relative group">
+               <button 
+                  onClick={() => setGameState(prev => ({ ...prev, status: 'bookshelf' }))}
+                  className="p-2 sm:p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[2px_2px_0px_0px_#5b21b6] sm:shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white flex items-center justify-center"
+                  aria-label="我的书架"
+                  title="我的书架"
+               >
+                  <Library className="w-4 h-4 sm:w-5 sm:h-5 text-[#5b21b6] group-hover:text-white transition-colors" />
+               </button>
+               <div 
+                  role="tooltip"
+                  className="hidden sm:block absolute top-full left-1/2 -translate-x-1/2 mt-2.5 px-2.5 py-1 bg-[#2e1065] text-white text-xs font-bold whitespace-nowrap rounded-sm border border-[#5b21b6] shadow-[2px_2px_0px_0px_rgba(91,33,182,0.6)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-150 z-30 select-none"
+               >
+                  我的书架
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#2e1065] border-t border-l border-[#5b21b6] rotate-45"></div>
+               </div>
+            </div>
         )}
       </div>
 
@@ -1272,12 +1338,12 @@ const App: React.FC = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md flex flex-col items-center mt-12 md:mt-0 relative z-10"
+        className="w-full max-w-md flex flex-col items-center mt-4 md:mt-0 relative z-10"
       >
-        <div className="w-24 h-24 bg-white border-2 border-[#5b21b6] rounded-full flex items-center justify-center mb-8 shadow-[4px_4px_0px_0px_#5b21b6] overflow-hidden">
-            <img src="/logo-mono.png" alt="Logo" className="w-20 h-20 object-contain select-none pointer-events-none" />
+        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white border-2 border-[#5b21b6] rounded-full flex items-center justify-center mb-6 sm:mb-8 shadow-[4px_4px_0px_0px_#5b21b6] overflow-hidden">
+            <img src="/logo-mono.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none pointer-events-none" />
         </div>
-        <h1 className="text-3xl font-black text-[#2e1065] mb-2 tracking-tighter uppercase">女性主义过敏源筛查</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-[#2e1065] mb-2 tracking-tighter uppercase">女性主义过敏源筛查</h1>
         <p className="text-purple-600 font-mono text-sm mb-6 tracking-widest">FEMINISM ALLERGEN SCREENING</p>
 
         {/* Visitor Counter */}
