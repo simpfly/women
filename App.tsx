@@ -5,7 +5,7 @@ import { generateScenarios, generateParentingStory } from './services/geminiServ
 import { db } from './services/db';
 import Toast from './components/Toast';
 import FeministQuestionIcon from './components/FeministQuestionIcon';
-import { Microscope, RotateCcw, Activity, User, ArrowRight, Quote, BookOpen, Library, X, Lock, Fingerprint, PenLine, Award, Baby, BookA, Heart, MessageSquareHeart, Globe, Zap, Star, ShieldCheck, Users, Trophy, Clipboard, Briefcase, Home, MessageCircle, Sparkles, Info, Check } from 'lucide-react';
+import { Microscope, RotateCcw, Activity, User, ArrowRight, Quote, BookOpen, Library, X, Lock, Fingerprint, PenLine, Award, Baby, BookA, Heart, MessageSquareHeart, Globe, Zap, Star, ShieldCheck, Users, Trophy, Clipboard, Briefcase, Home, MessageCircle, Sparkles, Info, Check, Film } from 'lucide-react';
 import { soundManager } from './utils/sound';
 
 // Import Static Data
@@ -761,16 +761,30 @@ const App: React.FC = () => {
       // Filter visible books (unlocked or placeholder)
       return (
           <div className="min-h-screen bg-[#f8fafc] p-6 md:p-12">
-              <div className="flex items-center justify-between mb-8 max-w-6xl mx-auto">
-                  <button onClick={loadIntro} className="flex items-center gap-2 text-[#5b21b6] font-bold group">
-                      <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition-transform" />
-                      返回大厅
-                  </button>
-                  <h1 className="text-2xl font-black text-[#2e1065] uppercase tracking-widest flex items-center gap-2">
-                      <Library className="w-6 h-6" /> 我的书架
-                  </h1>
-                  <div className="w-20"></div>
-              </div>
+               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 max-w-6xl mx-auto">
+                   <div className="flex items-center justify-between md:justify-start gap-6">
+                       <button onClick={loadIntro} className="flex items-center gap-2 text-[#5b21b6] font-bold group">
+                           <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition-transform" />
+                           返回大厅
+                       </button>
+                       <h1 className="text-2xl font-black text-[#2e1065] uppercase tracking-widest flex items-center gap-2">
+                           <Library className="w-6 h-6" /> 我的书架
+                       </h1>
+                   </div>
+
+                   {/* Collection Progress */}
+                   <div className="bg-white px-4 py-2 rounded-full border border-purple-200 shadow-sm flex items-center gap-3 self-start md:self-auto">
+                       <span className="text-xs font-bold text-gray-600">
+                           已收集 <span className="text-[#5b21b6] font-mono text-sm">{profile.unlockedBookIds.length}</span> / {FEMINIST_LIBRARY.length} 本
+                       </span>
+                       <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                           <div 
+                               className="h-full bg-[#5b21b6] rounded-full transition-all duration-500" 
+                               style={{ width: `${Math.round((profile.unlockedBookIds.length / FEMINIST_LIBRARY.length) * 100)}%` }}
+                           ></div>
+                       </div>
+                   </div>
+               </div>
 
               <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                   {FEMINIST_LIBRARY.map((book) => {
@@ -988,22 +1002,23 @@ const App: React.FC = () => {
                         <>
                              {/* Filter Chips */}
                              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                                {(['ALL', 'MODEL', 'FACT', 'POLICY', 'COMMUNITY'] as const).map(f => (
-                                    <button
-                                        key={f}
-                                        onClick={() => setEmpowermentFilter(f)}
-                                        className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap transition-colors border ${
-                                            empowermentFilter === f 
-                                            ? 'bg-[#5b21b6] text-white border-[#5b21b6]' 
-                                            : 'bg-white text-[#5b21b6] border-[#5b21b6]'
-                                        }`}
-                                    >
-                                        {f === 'ALL' ? '全部' : 
-                                         f === 'MODEL' ? '榜样' : 
-                                         f === 'FACT' ? '新知' : 
-                                         f === 'POLICY' ? '权益' : '社群'}
-                                    </button>
-                                ))}
+                                 {(['ALL', 'MODEL', 'MEDIA', 'FACT', 'POLICY', 'COMMUNITY'] as const).map(f => (
+                                     <button
+                                         key={f}
+                                         onClick={() => setEmpowermentFilter(f)}
+                                         className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap transition-colors border ${
+                                             empowermentFilter === f 
+                                             ? 'bg-[#5b21b6] text-white border-[#5b21b6]' 
+                                             : 'bg-white text-[#5b21b6] border-[#5b21b6]'
+                                         }`}
+                                     >
+                                         {f === 'ALL' ? '全部' : 
+                                          f === 'MODEL' ? '榜样' : 
+                                          f === 'MEDIA' ? '影视' :
+                                          f === 'FACT' ? '新知' : 
+                                          f === 'POLICY' ? '权益' : '社群'}
+                                     </button>
+                                 ))}
                              </div>
 
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1018,6 +1033,7 @@ const App: React.FC = () => {
                                                  {item.subtitle && <p className="text-xs text-gray-500 font-mono uppercase">{item.subtitle}</p>}
                                              </div>
                                              {item.type === 'MODEL' && <Star className="w-5 h-5 text-yellow-400 fill-current" />}
+                                             {item.type === 'MEDIA' && <Film className="w-5 h-5 text-pink-500" />}
                                              {item.type === 'FACT' && <Zap className="w-5 h-5 text-blue-400" />}
                                              {item.type === 'POLICY' && <ShieldCheck className="w-5 h-5 text-green-500" />}
                                              {item.type === 'COMMUNITY' && <Users className="w-5 h-5 text-purple-500" />}

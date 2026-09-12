@@ -73,7 +73,7 @@ export interface UserStory {
 }
 
 // --- Empowerment Resource Types (New) ---
-export type EmpowermentType = 'MODEL' | 'FACT' | 'POLICY' | 'COMMUNITY';
+export type EmpowermentType = 'MODEL' | 'FACT' | 'POLICY' | 'COMMUNITY' | 'MEDIA';
 
 export interface EmpowermentItem {
   id: string;
