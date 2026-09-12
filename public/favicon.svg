@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <style>
+    :root {
+      --icon-color: #171717;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --icon-color: #f5f5f5;
+      }
+    }
+  </style>
+  <!-- ♀ + ? 极简融合：问号弧度与女性符号圆环共生 -->
+  <path
+    d="M 39 51 A 21 21 0 1 1 60 45 C 53.5 51.5 50 57 50 63 L 50 76"
+    stroke="var(--icon-color)"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- 十字基座 -->
+  <line
+    x1="34"
+    y1="68"
+    x2="66"
+    y2="68"
+    stroke="var(--icon-color)"
+    stroke-width="9"
+    stroke-linecap="round"
+  />
+  <!-- 问号终点 -->
+  <circle
+    cx="50"
+    cy="90"
+    r="5"
+    fill="var(--icon-color)"
+  />
+</svg>
