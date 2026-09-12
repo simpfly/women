@@ -121,7 +121,6 @@ const App: React.FC = () => {
   
   // New States for Features
   const [visitorCount, setVisitorCount] = useState(0);
-  const [totalTestRounds, setTotalTestRounds] = useState(0);
   const [stories, setStories] = useState<UserStory[]>([]);
   const [empowermentFilter, setEmpowermentFilter] = useState<EmpowermentType | 'ALL'>('ALL');
   const [storyDraft, setStoryDraft] = useState('');
@@ -193,7 +192,6 @@ const App: React.FC = () => {
         const stats = await db.getGlobalStats();
         if (stats) {
             setVisitorCount(stats.totalUsers);
-            setTotalTestRounds(stats.totalTestRounds);
         }
 
         // 4. 闲时静默预加载非核心报告大模块，保障全流程无阻塞
@@ -659,10 +657,6 @@ const App: React.FC = () => {
             encounteredAllergens: prev.encounteredAllergens // Keep existing
         };
     });
-
-    // 累加累计完成的测试轮次并更新状态
-    const updatedTotalRounds = db.recordTestCompletion();
-    setTotalTestRounds(updatedTotalRounds);
 
     setGameState(prev => ({ 
         ...prev, 
@@ -1286,21 +1280,12 @@ const App: React.FC = () => {
         <h1 className="text-3xl font-black text-[#2e1065] mb-2 tracking-tighter uppercase">女性主义过敏源筛查</h1>
         <p className="text-purple-600 font-mono text-sm mb-6 tracking-widest">FEMINISM ALLERGEN SCREENING</p>
 
-        {/* Real-time Community Stats */}
-        <div className="bg-purple-50/90 px-4 py-2 rounded-full mb-8 flex items-center justify-center flex-wrap gap-x-4 gap-y-1 border border-[#5b21b6]/30 shadow-sm text-xs text-[#5b21b6]">
-            <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                <span className="font-medium text-gray-700">已累计筛查:</span>
-                <span className="font-mono font-bold text-sm text-[#5b21b6]">{totalTestRounds.toLocaleString()}</span>
-                <span className="text-[10px] text-gray-500">轮次</span>
-            </div>
-            <div className="hidden sm:inline-block w-px h-3 bg-purple-200" />
-            <div className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#5b21b6]" />
-                <span className="font-medium text-gray-700">已链接观察者:</span>
-                <span id="busuanzi_value_site_uv" className="font-mono font-bold text-sm text-[#5b21b6]">{visitorCount.toLocaleString()}</span>
-                <span className="text-[10px] text-gray-500">人</span>
-            </div>
+        {/* Visitor Counter */}
+        <div className="bg-purple-100 px-4 py-1.5 rounded-full mb-8 flex items-center gap-2 border border-[#5b21b6]">
+            <Globe className="w-3.5 h-3.5 text-[#5b21b6]" />
+            <span className="text-xs font-bold text-[#5b21b6] tracking-wider">
+                已链接的观察者: <span id="busuanzi_value_site_uv" className="font-mono text-sm">{visitorCount.toLocaleString()}</span>
+            </span>
         </div>
         
         <div className="bg-white p-6 border-2 border-[#5b21b6] mb-8 text-left space-y-4 shadow-[6px_6px_0px_0px_#5b21b6] w-full relative overflow-hidden">
