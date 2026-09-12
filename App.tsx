@@ -68,12 +68,7 @@ const modalFallback = (
   </div>
 );
 
-export type LoadingSpeedMode = 'immersive' | 'fast';
-
-const LOADING_DURATIONS: Record<LoadingSpeedMode, number> = {
-  immersive: 1800,
-  fast: 400
-};
+const LOADING_DURATION_MS = 1800; // 默认沉浸模式：1.8s，充分阅读女性主义名言与平滑进度展示
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -133,16 +128,6 @@ const App: React.FC = () => {
   const [isSubmittingStory, setIsSubmittingStory] = useState(false);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
-  // Loading Speed Preference ('immersive' | 'fast')
-  const [loadingSpeedMode, setLoadingSpeedMode] = useState<LoadingSpeedMode>(() => {
-    try {
-      const saved = localStorage.getItem('loading_speed_mode');
-      return (saved === 'fast' || saved === 'immersive') ? saved : 'immersive';
-    } catch {
-      return 'immersive';
-    }
-  });
-
   const skipLoadingResolverRef = React.useRef<(() => void) | null>(null);
 
   const waitForLoading = (ms: number) => {
@@ -164,18 +149,6 @@ const App: React.FC = () => {
     if (skipLoadingResolverRef.current) {
       skipLoadingResolverRef.current();
     }
-  };
-
-  const toggleLoadingSpeedMode = () => {
-    const nextMode: LoadingSpeedMode = loadingSpeedMode === 'immersive' ? 'fast' : 'immersive';
-    setLoadingSpeedMode(nextMode);
-    try {
-      localStorage.setItem('loading_speed_mode', nextMode);
-    } catch {
-      // ignore
-    }
-    soundManager.playClick();
-    setActiveToast(nextMode === 'immersive' ? '已切换至沉浸模式 (1.8s 名言阅读)' : '已切换至极速模式 (0.4s 快速过渡)');
   };
 
   // --- INITIALIZATION ---
@@ -387,7 +360,7 @@ const App: React.FC = () => {
           return;
       }
 
-      const targetDuration = LOADING_DURATIONS[loadingSpeedMode];
+      const targetDuration = LOADING_DURATION_MS;
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, targetDuration - elapsed);
 
@@ -473,7 +446,7 @@ const App: React.FC = () => {
       const startTime = Date.now();
       try {
           const storyEvents = await generateParentingStory(childGender);
-          const targetDuration = LOADING_DURATIONS[loadingSpeedMode];
+          const targetDuration = LOADING_DURATION_MS;
           const elapsed = Date.now() - startTime;
           const remaining = Math.max(0, targetDuration - elapsed);
 
@@ -1199,36 +1172,6 @@ const App: React.FC = () => {
                         在RPG模式中，你将扮演监护人。你的每一次选择都将决定孩子是成为<span className="font-bold text-[#5b21b6]">传统的顺从者</span>还是<span className="font-bold text-[#5b21b6]">自由的灯塔</span>。
                     </p>
                 </div>
-
-                {/* Motion & Loading Preferences */}
-                <div>
-                    <h3 className="text-[#5b21b6] font-bold border-b-2 border-[#5b21b6] inline-block mb-2">04. 过场动画与加载速度</h3>
-                    <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                        为关怀神经多样性人群并满足不同作答习惯，你可以自由调节过场节奏（任何模式下均可轻触屏幕直接跳过）：
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => { setLoadingSpeedMode('immersive'); try { localStorage.setItem('loading_speed_mode', 'immersive'); } catch {} soundManager.playClick(); }}
-                            className={`p-3 border-2 text-left transition-all ${loadingSpeedMode === 'immersive' ? 'border-[#5b21b6] bg-purple-50 shadow-[3px_3px_0px_0px_#5b21b6]' : 'border-gray-200 bg-white hover:border-[#5b21b6]'}`}
-                        >
-                            <p className="font-bold text-xs text-[#2e1065] flex items-center gap-1">
-                                📖 沉浸模式 (1.8s)
-                            </p>
-                            <p className="text-[10px] text-gray-500 mt-1">从容阅读女性主义名言，配平滑进度条</p>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setLoadingSpeedMode('fast'); try { localStorage.setItem('loading_speed_mode', 'fast'); } catch {} soundManager.playClick(); }}
-                            className={`p-3 border-2 text-left transition-all ${loadingSpeedMode === 'fast' ? 'border-[#5b21b6] bg-purple-50 shadow-[3px_3px_0px_0px_#5b21b6]' : 'border-gray-200 bg-white hover:border-[#5b21b6]'}`}
-                        >
-                            <p className="font-bold text-xs text-[#2e1065] flex items-center gap-1">
-                                ⚡ 极速模式 (0.4s)
-                            </p>
-                            <p className="text-[10px] text-gray-500 mt-1">快速轻量过渡，适合高效连续作答</p>
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <div className="p-4 bg-purple-50 text-center border-t border-purple-100">
@@ -1256,14 +1199,6 @@ const App: React.FC = () => {
       )}
       {/* Top Bar Actions */}
       <div className="absolute top-6 right-6 flex gap-3 z-20">
-         <button 
-            onClick={toggleLoadingSpeedMode}
-            className={`p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group flex items-center justify-center`}
-            aria-label={loadingSpeedMode === 'immersive' ? "当前过场：沉浸模式 (1.8s)，点击切换为极速模式" : "当前过场：极速模式 (0.4s)，点击切换为沉浸模式"}
-            title={loadingSpeedMode === 'immersive' ? "过场速度：沉浸模式 (1.8s 名言阅读)" : "过场速度：极速模式 (0.4s 快速过渡)"}
-         >
-            <Zap className={`w-5 h-5 ${loadingSpeedMode === 'fast' ? 'text-amber-500 fill-amber-500 group-hover:text-amber-300' : 'text-[#5b21b6] group-hover:text-white'}`} />
-         </button>
          <button 
             onClick={() => setShowTutorial(true)}
             className="p-3 border-2 border-[#5b21b6] rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all shadow-[4px_4px_0px_0px_#5b21b6] active:translate-y-1 active:shadow-none bg-white group"
@@ -1401,21 +1336,6 @@ const App: React.FC = () => {
             <div className="w-10"></div>
         </div>
 
-        {/* Loading Speed Toggle Pill */}
-        <div className="flex items-center justify-between bg-white border border-[#5b21b6] px-3 py-1.5 shadow-[2px_2px_0px_0px_#5b21b6] text-xs font-mono">
-            <span className="text-gray-500">过场节奏:</span>
-            <button
-                type="button"
-                onClick={toggleLoadingSpeedMode}
-                className="text-[#5b21b6] font-bold hover:underline flex items-center gap-1.5"
-                title="点击切换过场模式"
-            >
-                <Zap className={`w-3.5 h-3.5 ${loadingSpeedMode === 'fast' ? 'text-amber-500 fill-amber-500' : 'text-[#5b21b6]'}`} />
-                <span>{loadingSpeedMode === 'immersive' ? '沉浸模式 (1.8s)' : '极速模式 (0.4s)'}</span>
-                <span className="text-[10px] text-gray-400">切换</span>
-            </button>
-        </div>
-
         <div className={`grid gap-4 ${gameState.appMode === 'parenting' ? 'grid-cols-1' : 'grid-cols-2'}`}>
             {[
                 { id: 'RANDOM', label: '随机混合', icon: <Sparkles className="w-6 h-6" />, desc: "综合测试" },
@@ -1466,8 +1386,7 @@ const App: React.FC = () => {
   );
 
   const renderLoading = () => {
-    const isFast = loadingSpeedMode === 'fast';
-    const durationSec = LOADING_DURATIONS[loadingSpeedMode] / 1000;
+    const durationSec = LOADING_DURATION_MS / 1000;
 
     return (
       <div 
@@ -1481,7 +1400,7 @@ const App: React.FC = () => {
           exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           className="bg-white border-2 border-[#5b21b6] p-8 md:p-10 shadow-[8px_8px_0px_0px_#5b21b6] max-w-lg w-full relative"
-          onClick={(e) => {
+          onClick={() => {
             skipLoading();
           }}
         >
@@ -1494,7 +1413,7 @@ const App: React.FC = () => {
               </span>
             </div>
             <span className="text-[10px] font-mono text-[#5b21b6] bg-purple-50 px-2.5 py-0.5 border border-[#5b21b6] font-bold">
-              {isFast ? '极速 0.4s' : '沉浸 1.8s'}
+              社会学实验
             </span>
           </div>
 
