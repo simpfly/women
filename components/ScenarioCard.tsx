@@ -76,13 +76,21 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
     }
   }, [scenario?.id, isStoryMode]);
 
+  const handleOptionClick = (score: number) => {
+    soundManager.playClick();
+    if (typeof window !== 'undefined' && window.getSelection) {
+      window.getSelection()?.removeAllRanges();
+    }
+    onEvaluate(score);
+  };
+
   // Content for Main Game vs Story Mode
   const content = isStoryMode ? storyEvent!.content : scenario!.content;
   const headerTitle = isStoryMode ? storyEvent!.title : scenario?.category;
   const headerSub = isStoryMode ? storyEvent!.age : `样本 #${scenario?.id.slice(-4)}`;
 
   return (
-    <div className="w-full max-w-md mx-auto md:max-w-2xl">
+    <div className="w-full max-w-md mx-auto md:max-w-2xl select-none">
       <motion.div
         key={isStoryMode ? storyEvent?.age : scenario?.id}
         initial={{ opacity: 0, y: 16 }}
@@ -98,7 +106,7 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                 {isStoryMode ? <Sparkles className="w-4 h-4 text-[#5b21b6]"/> : <CategoryIcon category={scenario!.category} />}
                 <span>{headerTitle}</span>
             </div>
-            <div className={`text-[10px] text-[#5b21b6] font-mono tracking-widest font-bold ${isStoryMode ? 'bg-[#5b21b6] text-white px-2 py-0.5' : 'opacity-60'}`}>
+            <div className={`text-[10px] text-[#5b21b6] font-mono tracking-widest font-bold ${isStoryMode ? 'bg-[#5b21b6] text-white' : 'opacity-60'}`}>
                 {headerSub}
             </div>
         </div>
@@ -130,8 +138,8 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                 {storyEvent!.options.map((opt, idx) => (
                     <button
                         key={idx}
-                        onClick={() => { soundManager.playClick(); onEvaluate(idx); }}
-                        className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4"
+                        onClick={() => handleOptionClick(idx)}
+                        className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4 select-none"
                     >
                          <span className="bg-[#5b21b6] text-white font-mono text-xs w-6 h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
                              {String.fromCharCode(65 + idx)}
@@ -146,8 +154,8 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                     scenario.options.map((opt, idx) => (
                         <button
                             key={idx}
-                            onClick={() => { soundManager.playClick(); onEvaluate(opt.score); }}
-                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4"
+                            onClick={() => handleOptionClick(opt.score)}
+                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-start gap-4 select-none"
                         >
                              <span className="bg-[#5b21b6] text-white font-mono text-xs w-6 h-6 flex items-center justify-center rounded-full shrink-0 group-hover:scale-110 transition-transform">
                                  {String.fromCharCode(65 + idx)}
@@ -163,8 +171,8 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, storyEvent, onEva
                     ].map((option, idx) => (
                         <button
                             key={idx}
-                            onClick={() => { soundManager.playClick(); onEvaluate(option.score); }}
-                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-center justify-between"
+                            onClick={() => handleOptionClick(option.score)}
+                            className="p-5 text-left bg-white hover:bg-purple-50 text-[#5b21b6] font-bold transition-colors border-b border-[#5b21b6] last:border-b-0 focus:outline-none focus:bg-purple-100 group flex items-center justify-between select-none"
                         >
                             <span className="text-sm md:text-base leading-tight uppercase tracking-widest font-black">{option.text}</span>
                             <span className="text-xl group-hover:scale-110 transition-transform opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100">{option.icon}</span>

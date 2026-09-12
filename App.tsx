@@ -1305,10 +1305,10 @@ const App: React.FC = () => {
                {isReportUnlocked ? (
                    <button 
                      onClick={() => { soundManager.playClick(); setShowReportModal(true); }}
-                     className="flex items-center gap-2 border-2 border-orange-500 bg-white px-3 py-1 rounded-sm hover:bg-orange-50 transition-colors group shadow-sm active:translate-y-[1px]"
+                     className="flex items-center gap-2 border-2 border-[#5b21b6] bg-white text-[#5b21b6] px-3 py-1 rounded-sm hover:bg-[#5b21b6] hover:text-white transition-all group shadow-sm active:translate-y-[1px]"
                    >
-                     <Fingerprint className="w-4 h-4 text-[#5b21b6] group-hover:text-orange-600" />
-                     <span className="text-[#5b21b6] group-hover:text-orange-600">报告生成</span>
+                     <Fingerprint className="w-4 h-4 text-[#5b21b6] group-hover:text-white transition-colors" />
+                     <span className="font-bold transition-colors">报告生成</span>
                    </button>
                ) : (
                    <div className="flex items-center gap-2 opacity-50 cursor-help" title={`还需回答 ${Math.max(0, targetCount - answeredCount)} 题`}>

@@ -44,6 +44,13 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   }
 
   useEffect(() => {
+    // 挂载时清除页面选区，防止因连击或事件穿透导致弹窗文本自动全选
+    if (typeof window !== 'undefined' && window.getSelection) {
+      window.getSelection()?.removeAllRanges();
+    }
+  }, []);
+
+  useEffect(() => {
     setLocalEncountered(hasEncountered);
   }, [hasEncountered]);
 
@@ -80,32 +87,32 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
       const isNeutral = scoreVal === 1;
 
       return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col"
+                className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col select-none"
             >
-                <div className={`p-6 text-center border-b-2 border-[#5b21b6] ${isGood ? 'bg-[#5b21b6] text-white' : isNeutral ? 'bg-purple-100 text-[#5b21b6]' : 'bg-gray-100 text-gray-500'}`}>
+                <div className={`p-6 text-center border-b-2 border-[#5b21b6] select-none ${isGood ? 'bg-[#5b21b6] text-white' : isNeutral ? 'bg-purple-100 text-[#5b21b6]' : 'bg-gray-100 text-gray-500'}`}>
                     <UserCheck className="w-8 h-8 mx-auto mb-2" />
-                    <h2 className="text-xl font-black uppercase tracking-widest">
+                    <h2 className="text-xl font-black uppercase tracking-widest select-none">
                         {isGood ? "成长轨迹优化" : isNeutral ? "常规成长路径" : "刻板印象加深"}
                     </h2>
                 </div>
                 
-                <div className="p-8 text-center">
-                    <p className="text-[#2e1065] text-lg font-medium leading-relaxed mb-6">
+                <div className="p-8 text-center select-none">
+                    <p className="text-[#2e1065] text-lg font-medium leading-relaxed mb-6 select-none">
                         "{storyFeedback.consequence}"
                     </p>
                     <div className="h-px bg-purple-100 mb-6"></div>
-                    <p className="text-xs text-purple-400 font-mono uppercase tracking-widest">
+                    <p className="text-xs text-purple-400 font-mono uppercase tracking-widest select-none">
                         {isGood ? "+2 分 (Empowered)" : isNeutral ? "+1 分 (Neutral)" : "+0 分 (Reinforced)"}
                     </p>
                 </div>
 
                 <button
                     onClick={onNext}
-                    className="w-full py-4 bg-white hover:bg-purple-50 text-[#5b21b6] font-bold uppercase tracking-widest border-t-2 border-[#5b21b6] flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-white hover:bg-purple-50 text-[#5b21b6] font-bold uppercase tracking-widest border-t-2 border-[#5b21b6] flex items-center justify-center gap-2 select-none"
                 >
                     下一阶段 <ArrowRight className="w-4 h-4" />
                 </button>
@@ -117,13 +124,13 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   // --- NORMAL MODE RENDER ---
   return (
     <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none"
         role="dialog"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white border-2 border-[#5b21b6] w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(91,33,182,0.5)] overflow-hidden flex flex-col max-h-[90vh] select-none"
       >
         {/* Header Color Logic */}
         <div className={`p-6 text-center relative overflow-hidden border-b-2 border-[#5b21b6] 
