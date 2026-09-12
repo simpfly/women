@@ -1244,8 +1244,8 @@ const App: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md flex flex-col items-center mt-12 md:mt-0 relative z-10"
       >
-        <div className="w-24 h-24 bg-white border-2 border-[#5b21b6] rounded-full flex items-center justify-center mb-8 shadow-[4px_4px_0px_0px_#5b21b6]">
-            <FeministQuestionIcon className="w-14 h-14 text-neutral-900" />
+        <div className="w-24 h-24 bg-white border-2 border-[#5b21b6] rounded-full flex items-center justify-center mb-8 shadow-[4px_4px_0px_0px_#5b21b6] overflow-hidden">
+            <img src="/logo-mono.png" alt="Logo" className="w-20 h-20 object-contain select-none pointer-events-none" />
         </div>
         <h1 className="text-3xl font-black text-[#2e1065] mb-2 tracking-tighter uppercase">女性主义过敏源筛查</h1>
         <p className="text-purple-600 font-mono text-sm mb-6 tracking-widest">FEMINISM ALLERGEN SCREENING</p>
