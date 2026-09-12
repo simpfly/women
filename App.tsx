@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState, UserGender, AllergenLevel, Book, Category, PlayerProfile, Achievement, Term, UserStory, EmpowermentType, TermCategory, Scenario } from './types';
-import { generateScenarios, generateParentingStory, preloadScenarios } from './services/geminiService'; 
+import { generateScenarios, generateParentingStory } from './services/geminiService'; 
 import { db } from './services/db';
 import Toast from './components/Toast';
 import FeministQuestionIcon from './components/FeministQuestionIcon';
@@ -51,8 +51,8 @@ const FEMINIST_QUOTES = [
 
 const STORY_TAG_OPTIONS = ['职场', '家庭', '关系', '公共空间', '成长时刻'] as const;
 const MAX_STORY_LENGTH = 280;
-const ScenarioCard = lazy(() => import('./components/ScenarioCard'));
-const AnalysisModal = lazy(() => import('./components/AnalysisModal'));
+import ScenarioCard from './components/ScenarioCard';
+import AnalysisModal from './components/AnalysisModal';
 const ReportModal = lazy(() => import('./components/ReportModal'));
 const STORY_TITLE_DESCRIPTIONS: Record<string, string> = {
   '灯塔守护者': '你持续给出了支持性回应，孩子学会了把边界、能力和自我价值放在一起理解。',
@@ -197,8 +197,15 @@ const App: React.FC = () => {
             setVisitorCount(baseCount + Math.floor(Date.now() / 600000));
         }
 
-        // 4. Preload Scenarios (Buffer AI questions)
-        preloadScenarios('female'); // Default to female context preloading
+        // 4. 闲时静默预加载非核心报告大模块，保障全流程无阻塞
+        const preloadHeavyModules = () => {
+          import('./components/ReportModal');
+        };
+        if ('requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(preloadHeavyModules);
+        } else {
+          setTimeout(preloadHeavyModules, 1200);
+        }
     };
     initData();
   }, []);
@@ -1397,7 +1404,6 @@ const App: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 16, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           className="bg-white border-2 border-[#5b21b6] p-8 md:p-10 shadow-[8px_8px_0px_0px_#5b21b6] max-w-lg w-full relative"
           onClick={() => {
@@ -1467,7 +1473,7 @@ const App: React.FC = () => {
       const currentItem = isStory ? gameState.storyEvents[gameState.currentIndex] : gameState.scenarios[gameState.currentIndex];
 
       return (
-        <div className="min-h-screen bg-[#f5f3ff] flex flex-col items-center justify-center p-4 relative">
+        <div className="min-h-screen bg-purple-50 pattern-diagonal-lines flex flex-col items-center justify-center p-4 relative">
              {/* Top Bar */}
              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-10">
                  <div className="flex items-center gap-2">
@@ -1476,35 +1482,31 @@ const App: React.FC = () => {
                      </div>
                      <span className="text-[#5b21b6] font-bold text-sm opacity-50">/ {total}</span>
                  </div>
-                 <button onClick={loadIntro} className="p-2 bg-white/50 rounded-full hover:bg-white transition-colors">
+                 <button onClick={loadIntro} className="p-2 bg-white/70 hover:bg-white rounded-full transition-colors border border-purple-200 shadow-sm">
                      <X className="w-5 h-5 text-gray-400" />
                  </button>
              </div>
 
              <div className="w-full max-w-2xl pt-12 pb-4">
-                 <Suspense fallback={modalFallback}>
-                     <AnimatePresence mode='wait'>
-                        <ScenarioCard 
-                            key={currentItem?.id}
-                            scenario={isStory ? undefined : currentItem as Scenario}
-                            storyEvent={isStory ? currentItem as any : undefined}
-                            onEvaluate={handleEvaluation}
-                        />
-                     </AnimatePresence>
-                 </Suspense>
+                 <AnimatePresence mode='wait'>
+                    <ScenarioCard 
+                        key={currentItem?.id}
+                        scenario={isStory ? undefined : currentItem as Scenario}
+                        storyEvent={isStory ? currentItem as any : undefined}
+                        onEvaluate={handleEvaluation}
+                    />
+                 </AnimatePresence>
              </div>
 
              {showAnalysis && (
-                <Suspense fallback={modalFallback}>
-                    <AnalysisModal 
-                        scenario={!isStory ? currentItem as Scenario : undefined}
-                        storyFeedback={storyFeedback}
-                        userChoice={lastUserChoice}
-                        onNext={nextScenario}
-                        onEncounter={handleEncounterAllergen}
-                        hasEncountered={!isStory && profile.encounteredAllergens.includes((currentItem as Scenario).allergenName)}
-                    />
-                </Suspense>
+                <AnalysisModal 
+                    scenario={!isStory ? currentItem as Scenario : undefined}
+                    storyFeedback={storyFeedback}
+                    userChoice={lastUserChoice}
+                    onNext={nextScenario}
+                    onEncounter={handleEncounterAllergen}
+                    hasEncountered={!isStory && profile.encounteredAllergens.includes((currentItem as Scenario).allergenName)}
+                />
              )}
         </div>
       );
