@@ -120,7 +120,7 @@ const App: React.FC = () => {
   const [herStoryTab, setHerStoryTab] = useState<'EMPOWERMENT' | 'COMMUNITY'>('EMPOWERMENT');
   
   // New States for Features
-  const [visitorCount, setVisitorCount] = useState(0);
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
   const [stories, setStories] = useState<UserStory[]>([]);
   const [empowermentFilter, setEmpowermentFilter] = useState<EmpowermentType | 'ALL'>('ALL');
   const [storyDraft, setStoryDraft] = useState('');
@@ -1284,7 +1284,7 @@ const App: React.FC = () => {
         <div className="bg-purple-100 px-4 py-1.5 rounded-full mb-8 flex items-center gap-2 border border-[#5b21b6]">
             <Globe className="w-3.5 h-3.5 text-[#5b21b6]" />
             <span className="text-xs font-bold text-[#5b21b6] tracking-wider">
-                已链接的观察者: <span id="busuanzi_value_site_uv" className="font-mono text-sm">{visitorCount.toLocaleString()}</span>
+                已链接的观察者: <span className="font-mono text-sm">{visitorCount !== null ? visitorCount.toLocaleString() : '...'}</span>
             </span>
         </div>
         

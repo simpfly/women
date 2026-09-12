@@ -1,7 +1,7 @@
 /**
- * 不蒜子 (Busuanzi) 纯前端免后端访客统计适配器
- * 监听不蒜子脚本注入的真实 UV (独立访客数) / PV (总访问人次)
- * 提供平滑渐进与安全兜底机制
+ * 不蒜子 (Busuanzi) 纯前端免后端真实访客统计适配器
+ * 在页面常驻隐藏打卡节点，接收不蒜子脚本回传的真实 UV (独立访客数)
+ * 完全由 React 数据驱动渲染，杜绝 DOM 冲突与虚假数字
  */
 
 export interface BusuanziStats {
@@ -12,29 +12,23 @@ export interface BusuanziStats {
 export function subscribeBusuanzi(
   onUpdate: (stats: BusuanziStats) => void
 ): () => void {
-  // 检查 DOM 中是否已有挂载节点，若无则在后台创建静默监听节点
-  let uvEl = document.getElementById('busuanzi_value_site_uv');
-  let pvEl = document.getElementById('busuanzi_value_site_pv');
-
-  let container: HTMLDivElement | null = null;
-  if (!uvEl || !pvEl) {
+  // 确保页面中具有专用的隐藏打卡容器与受控节点
+  let container = document.getElementById('busuanzi_hidden_container');
+  if (!container) {
     container = document.createElement('div');
     container.id = 'busuanzi_hidden_container';
-    container.style.display = 'none';
+    container.style.position = 'fixed';
+    container.style.top = '-9999px';
+    container.style.left = '-9999px';
+    container.style.opacity = '0';
+    container.style.pointerEvents = 'none';
     container.setAttribute('aria-hidden', 'true');
-
-    if (!uvEl) {
-      uvEl = document.createElement('span');
-      uvEl.id = 'busuanzi_value_site_uv';
-      container.appendChild(uvEl);
-    }
-    if (!pvEl) {
-      pvEl = document.createElement('span');
-      pvEl.id = 'busuanzi_value_site_pv';
-      container.appendChild(pvEl);
-    }
+    container.innerHTML = '<span id="busuanzi_value_site_uv"></span><span id="busuanzi_value_site_pv"></span>';
     document.body.appendChild(container);
   }
+
+  const uvEl = document.getElementById('busuanzi_value_site_uv');
+  const pvEl = document.getElementById('busuanzi_value_site_pv');
 
   const parseNumber = (el: HTMLElement | null): number | undefined => {
     if (!el) return undefined;
@@ -51,10 +45,10 @@ export function subscribeBusuanzi(
     }
   };
 
-  // 先检查一次当前节点是否已有内容
+  // 立即检查一次
   notify();
 
-  // 监听 DOM 文本变动（不蒜子脚本异步注入数据时会触发）
+  // 监听数据异步注入
   const observer = new MutationObserver(() => {
     notify();
   });
@@ -65,8 +59,5 @@ export function subscribeBusuanzi(
 
   return () => {
     observer.disconnect();
-    if (container && container.parentNode) {
-      container.parentNode.removeChild(container);
-    }
   };
 }

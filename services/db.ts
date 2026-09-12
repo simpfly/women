@@ -167,8 +167,6 @@ export const db = {
               return null;
           }
       }
-      // 默认基础访客数（上线后由 busuanzi 覆盖为真实 UV）
-      const baseCount = 128450;
-      return { totalUsers: baseCount };
+      return null;
   }
 }
